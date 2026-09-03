@@ -45,7 +45,8 @@ jobs:
           Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
           Copy-Item -Recurse ../newtab/dist dist
           Remove-Item zero-newtab@example.com.xpi -ErrorAction SilentlyContinue
-          Compress-Archive -Path manifest.json,background.js,newtab-override.js,dist -DestinationPath "zero-newtab@example.com.xpi"
+          Compress-Archive -Path manifest.json,background.js,newtab-override.js,dist -DestinationPath "zero-newtab.zip"
+          Move-Item "zero-newtab.zip" "zero-newtab@example.com.xpi" -Force
           if (-not (Test-Path "zero-newtab@example.com.xpi")) { throw "XPI olusmadi" }
           cd $env:GITHUB_WORKSPACE
 
