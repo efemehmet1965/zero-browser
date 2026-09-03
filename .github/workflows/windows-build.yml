@@ -1,5 +1,5 @@
 name: zero-windows-build
-# ZERO Windows uygulamasi (.exe iceren zip) uretir.
+# ZERO Windows uygulamasi (firefox.exe iceren zip) uretir.
 # Kullanim: GitHub repo sayfasi -> Actions -> zero-windows-build -> Run workflow.
 # Bitince Artifacts'tan zero-windows.zip indir, ac, firefox.exe calistir.
 # NOT: imzasiz build oldugu icin SmartScreen uyarir -> "Run anyway" de.
@@ -15,68 +15,74 @@ jobs:
         shell: powershell
     steps:
       - name: ZERO reposu
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: zero
 
-      - name: Arac kur (hg, node kontrol)
+      - name: Arac kur (hg, node)
         run: |
+          $ErrorActionPreference = 'Stop'
           pip install mercurial
+          where.exe hg
           node --version
           npm --version
+          Test-Path "$env:GITHUB_WORKSPACE/zero/firefox-fork/mozconfig-windows" -ErrorAction Stop | Out-Null
 
       - name: ESR kaynagi
         run: |
+          $ErrorActionPreference = 'Stop'
           hg clone https://hg.mozilla.org/releases/mozilla-esr128 firefox-esr
-
-      - name: ZERO dosyalari (mozconfig + branding + prefs)
-        run: |
-          Copy-Item zero/firefox-fork/mozconfig-windows firefox-esr/.mozconfig
-          Get-ChildItem firefox-esr/browser/branding
-          New-Item -ItemType Directory -Force firefox-esr/browser/branding/zero | Out-Null
-          Copy-Item firefox-esr/browser/branding/official/* firefox-esr/browser/branding/zero/ -Recurse -Force
-          (Get-Content firefox-esr/browser/branding/zero/brand.properties) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.properties
-          (Get-Content firefox-esr/browser/branding/zero/brand.dtd) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.dtd
-          (Get-Content firefox-esr/browser/branding/zero/brand.ftl) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.ftl
-          Add-Content firefox-esr/browser/app/profile/firefox.js @"
-          // ZERO defaults (MVP)
-          pref(`"toolkit.legacyUserProfileCustomizations.stylesheets`", true);
-          pref(`"browser.pocket.enabled`", false);
-          pref(`"datareporting.healthreport.uploadEnabled`", false);
-          pref(`"app.shield.optoutstudies.enabled`", false);
-          pref(`"xpinstall.signatures.required`", false);
-          "@
+          if (-not (Test-Path firefox-esr/browser/app/profile/firefox.js)) { throw "clone eksik gorunuyor" }
 
       - name: Newtab derle + XPI paketle
         run: |
+          $ErrorActionPreference = 'Stop'
           cd zero/newtab
           npm install --no-audit --no-fund
           npm run build
+          if (-not (Test-Path dist/index.html)) { throw "newtab dist uretilmedi" }
           cd ../extension
           Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
           Copy-Item -Recurse ../newtab/dist dist
           Remove-Item zero-newtab@example.com.xpi -ErrorAction SilentlyContinue
           Compress-Archive -Path manifest.json,background.js,newtab-override.js,dist -DestinationPath "zero-newtab@example.com.xpi"
+          if (-not (Test-Path "zero-newtab@example.com.xpi")) { throw "XPI olusmadi" }
           cd $env:GITHUB_WORKSPACE
 
-      - name: Derle
+      - name: MozillaBuild kur
         run: |
-          cd firefox-esr
-          ./mach bootstrap --no-interactive --application-choice browser
-          ./mach build
+          $ErrorActionPreference = 'Stop'
+          if (-not (Test-Path C:\mozilla-build)) {
+            Invoke-WebRequest -Uri https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe -OutFile $env:RUNNER_TEMP\mb-setup.exe
+            Start-Process $env:RUNNER_TEMP\mb-setup.exe -ArgumentList '/S' -Wait
+          }
+          $bash = Get-ChildItem -Recurse -Path C:\mozilla-build -Filter bash.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match 'usr\\bin' } | Select-Object -First 1
+          if (-not $bash) { throw "mozilla-build bash bulunamadi" }
+          $bash.FullName | Set-Content $env:RUNNER_TEMP\moz-bash.txt
+          Get-Content $env:RUNNER_TEMP\moz-bash.txt
 
-      - name: Paketle + distribution ekle
+      - name: Derle + paketle (MozillaBuild)
         run: |
+          $ErrorActionPreference = 'Stop'
+          $bash = Get-Content $env:RUNNER_TEMP\moz-bash.txt
+          $env:ZERO_WS = ($env:GITHUB_WORKSPACE -replace '\\','/')
+          & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"'
+
+      - name: Distribution ekle + yukle
+        run: |
+          $ErrorActionPreference = 'Stop'
           cd firefox-esr
-          ./mach package
           $zip = Get-ChildItem -Recurse obj-zero/dist -Filter "firefox-*.zip" | Select-Object -First 1
-          if (-not $zip) { Get-ChildItem obj-zero/dist | Out-String | Write-Output; throw "paket zip bulunamadi" }
+          if (-not $zip) { Get-ChildItem obj-zero/dist; throw "paket zip bulunamadi" }
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
           Expand-Archive $zip.FullName $tmp
           $fw = Get-ChildItem $tmp -Directory | Select-Object -First 1
+          if (-not (Test-Path "$($fw.FullName)/firefox.exe")) { throw "pakette firefox.exe yok" }
           New-Item -ItemType Directory -Force "$($fw.FullName)/distribution/extensions" | Out-Null
           Copy-Item "$env:GITHUB_WORKSPACE/zero/extension/zero-newtab@example.com.xpi" "$($fw.FullName)/distribution/extensions/" -Force
+          if (-not (Test-Path "$($fw.FullName)/distribution/extensions/zero-newtab@example.com.xpi")) { throw "XPI kopyalanamadi" }
           Set-Content "$($fw.FullName)/distribution/policies.json" @'
           {
             "policies": {
@@ -89,6 +95,10 @@ jobs:
           }
           '@
           Compress-Archive -Path "$($fw.FullName)" -DestinationPath "$env:RUNNER_TEMP/zero-windows.zip" -Force
+          $size = (Get-Item "$env:RUNNER_TEMP/zero-windows.zip").Length
+          Write-Output "zero-windows.zip: $([math]::Round($size/1MB)) MB"
+          if ($size -lt 50MB) { throw "paket supheli derecede kucuk ($size bayt)" }
+          cd $env:GITHUB_WORKSPACE
 
       - name: Yukle
         uses: actions/upload-artifact@v4
