@@ -1,0 +1,16 @@
+{
+  "policies": {
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DontCheckDefaultBrowser": true,
+    "Homepage": {
+      "URL": "zero://newtab",
+      "Locked": false
+    },
+    "NewTabPage": true,
+    "SearchEngines": {
+      "Default": "DuckDuckGo"
+    }
+  }
+}

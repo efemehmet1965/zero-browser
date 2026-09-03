@@ -1,0 +1,176 @@
+/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
+ *
+ * Install: about:config → toolkit.legacyUserProfileCustomizations.stylesheets = true,
+ * then copy this file + userContent.css into <profile>/chrome/ and restart.
+ *
+ * Goal: native tab bar + toolbar in pure black with the red active-tab
+ * indicator, so the React newtab content (fake WindowBar/Toolbar/Sidebar)
+ * blends seamlessly at 1280x720.
+ */
+
+:root {
+  --zero-black: #000000;
+  --zero-surface: #0a0a0a;
+  --zero-card: #1a1a1a;
+  --zero-pill: #1e1e1e;
+  --zero-border: #1e1e1e;
+  --zero-border-light: #2a2a2a;
+  --zero-red: #e30613;
+  --zero-text: #ffffff;
+  --zero-muted: #888888;
+}
+
+/* --- Top chrome: pure black --- */
+#navigator-toolbox,
+#titlebar,
+#TabsToolbar,
+#toolbar-menubar,
+#nav-bar,
+#PersonalToolbar {
+  background: var(--zero-black) !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--zero-text) !important;
+}
+
+#navigator-toolbox {
+  border-bottom: 1px solid var(--zero-border) !important;
+}
+
+/* --- Tabs: dark #1A1A1A, rounded top 8px, red top line on active --- */
+.tabbrowser-tab .tab-background {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  margin-block: 2px 0 !important;
+}
+
+.tabbrowser-tab:not([selected]) .tab-background {
+  background: transparent !important;
+}
+.tabbrowser-tab:not([selected]):hover .tab-background {
+  background: #141414 !important;
+}
+
+.tabbrowser-tab[selected] .tab-background,
+.tabbrowser-tab[visuallyselected] .tab-background {
+  background: var(--zero-card) !important;
+  position: relative;
+}
+
+/* 2px red top indicator on the active tab */
+.tabbrowser-tab[selected] .tab-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--zero-red);
+}
+
+.tabbrowser-tab .tab-label,
+.tabbrowser-tab .tab-text {
+  color: #bbb !important;
+}
+.tabbrowser-tab[selected] .tab-label {
+  color: #fff !important;
+}
+.tabbrowser-tab .tab-close-button {
+  color: var(--zero-muted) !important;
+}
+
+/* New-tab "+" button */
+#tabs-newtab-button,
+#new-tab-button {
+  fill: var(--zero-muted) !important;
+}
+#tabs-newtab-button:hover,
+#new-tab-button:hover {
+  fill: #fff !important;
+  background: var(--zero-card) !important;
+}
+
+/* --- Toolbar buttons: white back, gray forward/refresh --- */
+#back-button .toolbarbutton-icon {
+  fill: #fff !important;
+}
+#forward-button .toolbarbutton-icon,
+#reload-button .toolbarbutton-icon,
+#stop-button .toolbarbutton-icon {
+  fill: #aaa !important;
+}
+#forward-button[disabled] .toolbarbutton-icon {
+  fill: #444 !important;
+}
+
+/* --- Address bar: pill, #1E1E1E, rounded-full --- */
+#urlbar-container,
+#urlbar {
+  --urlbar-box-bgcolor: var(--zero-pill) !important;
+}
+#urlbar-background,
+#urlbar:not([focused]) #urlbar-background,
+#urlbar[focused] #urlbar-background {
+  background: var(--zero-pill) !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+#urlbar[focused] #urlbar-background {
+  border-color: var(--zero-border-light) !important;
+}
+#urlbar-input,
+.urlbar-input-box,
+#identity-box,
+#tracking-protection-icon-container {
+  color: #ddd !important;
+}
+
+/* Star / shield / avatar / menu in the address bar row */
+#star-button,
+#tracking-protection-icon-box,
+#identity-icon-box,
+#page-action-buttons .toolbarbutton-icon,
+#urlbar .urlbar-page-action {
+  fill: var(--zero-muted) !important;
+  color: var(--zero-muted) !important;
+}
+
+/* --- Sidebar: 180px, #0A0A0A, right border --- */
+#sidebar-box {
+  background: var(--zero-surface) !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+  border-right: 1px solid var(--zero-border) !important;
+}
+#sidebar-header {
+  background: var(--zero-surface) !important;
+  border-bottom: 1px solid var(--zero-border) !important;
+  color: var(--zero-text) !important;
+}
+#sidebar {
+  background: var(--zero-surface) !important;
+}
+
+/* Bookmarks toolbar + status bar blend into black */
+#PersonalToolbar {
+  background: var(--zero-black) !important;
+  color: var(--zero-muted) !important;
+}
+
+/* Window controls (Windows style, right side) */
+.titlebar-buttonbox-container .titlebar-button {
+  color: var(--zero-muted) !important;
+}
+.titlebar-buttonbox-container .titlebar-button:hover {
+  background: var(--zero-card) !important;
+  color: #fff !important;
+}
+
+/* Hide light-theme artifacts: remove default separators/shadows */
+#navigator-toolbox::after,
+#nav-bar::after {
+  display: none !important;
+}

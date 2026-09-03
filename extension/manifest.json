@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "ZERO Newtab",
+  "version": "0.1.0",
+  "description": "ZERO browser MVP — replaces newtab with zero://newtab (React+Vite build).",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "zero-newtab@example.com",
+      "strict_min_version": "109.0"
+    }
+  },
+  "permissions": ["storage", "tabs"],
+  "chrome_url_overrides": {
+    "newtab": "dist/index.html"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  }
+}

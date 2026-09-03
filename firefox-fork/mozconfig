@@ -1,0 +1,18 @@
+# Firefox build config stub — PHASE 2 ONLY (not needed for the demo).
+# The MVP demo runs on stock Firefox via chrome/ + extension/ + newtab/dist.
+#
+# When the team forks firefox-esr:
+#   1. cp firefox-fork/mozconfig <esr-checkout>/.mozconfig
+#   2. See README-FORK.md for branding + system-addon + zero:// protocol steps.
+
+# Build the Browser app (not full automation clutter)
+ac_add_options --enable-application=browser
+ac_add_options --disable-tests
+
+# Brand as ZERO (branding/zero/ in this repo maps to browser/branding/zero/)
+# ac_add_options --with-branding=browser/branding/zero
+
+# Dev-tools off for a lean local build; CI turns them back on.
+ac_add_options --disable-debug
+ac_add_options --enable-optimize
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-zero

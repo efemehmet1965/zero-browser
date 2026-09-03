@@ -1,0 +1,19 @@
+/* ZERO userContent.css — paints about: pages black so the demo never
+ * flashes white between newtab loads. Same install as userChrome.css. */
+
+@-moz-document url(about:newtab), url(about:home), url(about:blank), url-prefix(about:) {
+  body,
+  html {
+    background: #000 !important;
+    color: #fff !important;
+  }
+}
+
+/* If the built React newtab is previewed outside moz-extension:// (vite dev,
+ * file://), enforce the same black canvas. */
+@-moz-document url-prefix(moz-extension://), url-prefix(file://), url-prefix(http://localhost:),
+  url-prefix(http://127.0.0.1:) {
+  body {
+    background: #000 !important;
+  }
+}

@@ -1,0 +1,29 @@
+name: zero-mvp-build
+# ZERO cekirdek MVP derlemesi. Manuel tetiklenir (saatler surer).
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Kaynak + yama
+        run: bash zero-browser/firefox-fork/scripts/fetch-and-patch.sh
+
+      - name: Derle
+        run: |
+          cd ~/zero-build/firefox-esr
+          ./mach build
+
+      - name: Paketle
+        run: |
+          cd ~/zero-build/firefox-esr
+          ./mach package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zero-linux-build
+          path: ~/zero-build/firefox-esr/obj-zero/dist/*.tar.bz2

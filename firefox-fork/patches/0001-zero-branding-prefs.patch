@@ -1,0 +1,27 @@
+# MVP yamasi 0001: ZERO markasi + ana sayfa.
+# Gercek ESR agacina uygulandiginda asagidaki dosyalar hedeflenir.
+# Bu dosya hem dokuman hem taslak - ilk rebase'te mozilla-esr128'e gore
+# satir numaralari tutmazsa `patch` fuzz ile uygular, olmazsa elle tut.
+#
+# Hedef 1: browser/branding/official -> browser/branding/zero
+#   (configure'da --with-branding=browser/branding/zero ile secilir,
+#    bkz. firefox-fork/mozconfig)
+#
+# Hedef 2: ana sayfa + newtab varsayilani (browser/app/profile/firefox.js):
+#
+# --- a/browser/app/profile/firefox.js
+# +++ b/browser/app/profile/firefox.js
+# @@
+# -pref("browser.startup.homepage", "about:home");
+# +pref("browser.startup.homepage", "zero://newtab");
+# +pref("zero.newtab.url", "zero://newtab");
+# +pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+# +pref("privacy.trackingprotection.enabled", true);
+#
+# Hedef 3: newtab override eklentisi system addon olarak:
+#   browser/extensions/zero-newtab/  <- extension/ + newtab/dist kopyalanir
+#   browser/extensions/moz.build'e `DIRS += ['zero-newtab']` satiri eklenir.
+#
+# NOT: yama dosyalari ESR surumune gore uretilir. Ilk kurulumda
+# `scripts/fetch-and-patch.sh` calistikten sonra `hg diff` ile gercek
+# patch uretip bu klasore kaydedin.
