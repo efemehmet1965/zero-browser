@@ -5,3 +5,4 @@ obj-zero/
 *.log
 .DS_Store
 Thumbs.db
+newtab/test-results/
