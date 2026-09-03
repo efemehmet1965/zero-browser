@@ -32,8 +32,9 @@ jobs:
       - name: ZERO dosyalari (mozconfig + branding + prefs)
         run: |
           Copy-Item zero/firefox-fork/mozconfig-windows firefox-esr/.mozconfig
-          Remove-Item -Recurse -Force firefox-esr/browser/branding/zero -ErrorAction SilentlyContinue
-          Copy-Item -Recurse firefox-esr/browser/branding/official firefox-esr/browser/branding/zero
+          Get-ChildItem firefox-esr/browser/branding
+          New-Item -ItemType Directory -Force firefox-esr/browser/branding/zero | Out-Null
+          Copy-Item firefox-esr/browser/branding/official/* firefox-esr/browser/branding/zero/ -Recurse -Force
           (Get-Content firefox-esr/browser/branding/zero/brand.properties) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.properties
           (Get-Content firefox-esr/browser/branding/zero/brand.dtd) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.dtd
           (Get-Content firefox-esr/browser/branding/zero/brand.ftl) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.ftl
