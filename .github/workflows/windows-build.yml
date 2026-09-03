@@ -38,13 +38,13 @@ jobs:
           (Get-Content firefox-esr/browser/branding/zero/brand.dtd) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.dtd
           (Get-Content firefox-esr/browser/branding/zero/brand.ftl) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.ftl
           Add-Content firefox-esr/browser/app/profile/firefox.js @"
-// ZERO defaults (MVP)
-pref(`"toolkit.legacyUserProfileCustomizations.stylesheets`", true);
-pref(`"browser.pocket.enabled`", false);
-pref(`"datareporting.healthreport.uploadEnabled`", false);
-pref(`"app.shield.optoutstudies.enabled`", false);
-pref(`"xpinstall.signatures.required`", false);
-"@
+          // ZERO defaults (MVP)
+          pref(`"toolkit.legacyUserProfileCustomizations.stylesheets`", true);
+          pref(`"browser.pocket.enabled`", false);
+          pref(`"datareporting.healthreport.uploadEnabled`", false);
+          pref(`"app.shield.optoutstudies.enabled`", false);
+          pref(`"xpinstall.signatures.required`", false);
+          "@
 
       - name: Newtab derle + XPI paketle
         run: |
