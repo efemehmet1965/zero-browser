@@ -1,0 +1,7 @@
+node_modules/
+newtab/dist/
+extension/dist/
+obj-zero/
+*.log
+.DS_Store
+Thumbs.db
