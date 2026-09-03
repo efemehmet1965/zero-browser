@@ -15,18 +15,27 @@ jobs:
         shell: powershell
     steps:
       - name: ZERO reposu
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           path: zero
 
-      - name: Arac kur (hg, node)
+      - name: Arac kontrol (hg, node)
         run: |
           $ErrorActionPreference = 'Stop'
-          pip install mercurial
           where.exe hg
+          hg --version
           node --version
           npm --version
           Test-Path "$env:GITHUB_WORKSPACE/zero/firefox-fork/mozconfig-windows" -ErrorAction Stop | Out-Null
+
+      - name: Disk kontrolu (erken uyarı)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $wsDrive = (Get-Item $env:GITHUB_WORKSPACE).PSDrive.Name
+          $freeGB = [math]::Round((Get-PSDrive $wsDrive).Free / 1GB)
+          Write-Output "workspace surucusu: $wsDrive, bos alan: $freeGB GB"
+          Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{n='FreeGB';e={[math]::Round($_.Free/1GB)}} | Out-String | Write-Output
+          if ($freeGB -lt 30) { throw "bos alan yetersiz ($freeGB GB < 30 GB). Workflow'u yeniden baslat (baska runner'a duser)." }
 
       - name: ESR kaynagi
         run: |
@@ -58,8 +67,12 @@ jobs:
             Start-Process $env:RUNNER_TEMP\mb-setup.exe -ArgumentList '/S' -Wait
           }
           $bash = Get-ChildItem -Recurse -Path C:\mozilla-build -Filter bash.exe -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -match 'usr\\bin' } | Select-Object -First 1
-          if (-not $bash) { throw "mozilla-build bash bulunamadi" }
+            Where-Object { $_.FullName -match '\\bin\\' } | Select-Object -First 1
+          if (-not $bash) {
+            Get-ChildItem C:\mozilla-build | Out-String | Write-Output
+            throw "mozilla-build bash bulunamadi"
+          }
+          & $bash.FullName --version
           $bash.FullName | Set-Content $env:RUNNER_TEMP\moz-bash.txt
           Get-Content $env:RUNNER_TEMP\moz-bash.txt
 
