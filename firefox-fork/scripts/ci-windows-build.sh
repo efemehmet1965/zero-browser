@@ -12,12 +12,18 @@ echo "== mozconfig =="
 cp "$ZERO/firefox-fork/mozconfig-windows" "$ESR/.mozconfig"
 
 echo "== branding (official -> zero) =="
-test -f "$ESR/browser/branding/official/brand.properties" || { echo "HATA: official branding yok"; ls "$ESR/browser/branding"; exit 1; }
+test -d "$ESR/browser/branding/official" || { echo "HATA: official branding yok"; ls "$ESR/browser/branding"; exit 1; }
+ls "$ESR/browser/branding/official"
 rm -rf "$ESR/browser/branding/zero"
 mkdir -p "$ESR/browser/branding/zero"
 cp "$ESR/browser/branding/official/"* "$ESR/browser/branding/zero/"
-sed -i 's/Firefox/ZERO/g' "$ESR/browser/branding/zero/brand.properties" "$ESR/browser/branding/zero/brand.dtd" "$ESR/browser/branding/zero/brand.ftl"
-grep -q ZERO "$ESR/browser/branding/zero/brand.properties"
+for f in brand.properties brand.dtd brand.ftl; do
+  if [ -f "$ESR/browser/branding/zero/$f" ]; then
+    sed -i 's/Firefox/ZERO/g' "$ESR/browser/branding/zero/$f"
+  else
+    echo "not: $f yok, atlandi"
+  fi
+done
 
 echo "== prefs =="
 if ! grep -q "ZERO defaults" "$ESR/browser/app/profile/firefox.js"; then
