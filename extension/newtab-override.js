@@ -3,7 +3,7 @@
 // spoof for the MVP demo (real protocol handler ships in Phase 2).
 (function () {
   try {
-    window.history.replaceState(null, '', '/zero://newtab');
+    window.history.replaceState(null, '', '#zero://newtab');
   } catch (e) {
     /* non-fatal on moz-extension:// */
   }

@@ -13,6 +13,8 @@ ac_add_options --disable-tests
 # ac_add_options --with-branding=browser/branding/zero
 
 # Dev-tools off for a lean local build; CI turns them back on.
+# NOT: artifact build kullaniyorsan (--enable-artifact-builds) alttaki iki
+# satiri kapat, yoksa configure "not available in this configuration" hatasi verir.
 ac_add_options --disable-debug
 ac_add_options --enable-optimize
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-zero

@@ -1,0 +1,96 @@
+name: zero-windows-build
+# ZERO Windows uygulamasi (.exe iceren zip) uretir.
+# Kullanim: GitHub repo sayfasi -> Actions -> zero-windows-build -> Run workflow.
+# Bitince Artifacts'tan zero-windows.zip indir, ac, firefox.exe calistir.
+# NOT: imzasiz build oldugu icin SmartScreen uyarir -> "Run anyway" de.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: ZERO reposu
+        uses: actions/checkout@v4
+        with:
+          path: zero
+
+      - name: Arac kur (hg, node kontrol)
+        run: |
+          pip install mercurial
+          node --version
+          npm --version
+
+      - name: ESR kaynagi
+        run: |
+          hg clone https://hg.mozilla.org/releases/mozilla-esr128 firefox-esr
+
+      - name: ZERO dosyalari (mozconfig + branding + prefs)
+        run: |
+          Copy-Item zero/firefox-fork/mozconfig-windows firefox-esr/.mozconfig
+          Remove-Item -Recurse -Force firefox-esr/browser/branding/zero -ErrorAction SilentlyContinue
+          Copy-Item -Recurse firefox-esr/browser/branding/official firefox-esr/browser/branding/zero
+          (Get-Content firefox-esr/browser/branding/zero/brand.properties) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.properties
+          (Get-Content firefox-esr/browser/branding/zero/brand.dtd) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.dtd
+          (Get-Content firefox-esr/browser/branding/zero/brand.ftl) -replace 'Firefox','ZERO' | Set-Content firefox-esr/browser/branding/zero/brand.ftl
+          Add-Content firefox-esr/browser/app/profile/firefox.js @"
+// ZERO defaults (MVP)
+pref(`"toolkit.legacyUserProfileCustomizations.stylesheets`", true);
+pref(`"browser.pocket.enabled`", false);
+pref(`"datareporting.healthreport.uploadEnabled`", false);
+pref(`"app.shield.optoutstudies.enabled`", false);
+pref(`"xpinstall.signatures.required`", false);
+"@
+
+      - name: Newtab derle + XPI paketle
+        run: |
+          cd zero/newtab
+          npm install --no-audit --no-fund
+          npm run build
+          cd ../extension
+          Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
+          Copy-Item -Recurse ../newtab/dist dist
+          Remove-Item zero-newtab@example.com.xpi -ErrorAction SilentlyContinue
+          Compress-Archive -Path manifest.json,background.js,newtab-override.js,dist -DestinationPath "zero-newtab@example.com.xpi"
+          cd $env:GITHUB_WORKSPACE
+
+      - name: Derle
+        run: |
+          cd firefox-esr
+          ./mach bootstrap --no-interactive --application-choice browser
+          ./mach build
+
+      - name: Paketle + distribution ekle
+        run: |
+          cd firefox-esr
+          ./mach package
+          $zip = Get-ChildItem -Recurse obj-zero/dist -Filter "firefox-*.zip" | Select-Object -First 1
+          if (-not $zip) { Get-ChildItem obj-zero/dist | Out-String | Write-Output; throw "paket zip bulunamadi" }
+          $tmp = "$env:RUNNER_TEMP/zero-pkg"
+          Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+          Expand-Archive $zip.FullName $tmp
+          $fw = Get-ChildItem $tmp -Directory | Select-Object -First 1
+          New-Item -ItemType Directory -Force "$($fw.FullName)/distribution/extensions" | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE/zero/extension/zero-newtab@example.com.xpi" "$($fw.FullName)/distribution/extensions/" -Force
+          Set-Content "$($fw.FullName)/distribution/policies.json" @'
+          {
+            "policies": {
+              "DisableTelemetry": true,
+              "DisableFirefoxStudies": true,
+              "DisablePocket": true,
+              "SearchEngines": { "Default": "DuckDuckGo" },
+              "Homepage": { "URL": "about:newtab", "Locked": false }
+            }
+          }
+          '@
+          Compress-Archive -Path "$($fw.FullName)" -DestinationPath "$env:RUNNER_TEMP/zero-windows.zip" -Force
+
+      - name: Yukle
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-windows
+          path: ${{ runner.temp }}/zero-windows.zip

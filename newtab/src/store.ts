@@ -78,10 +78,12 @@ async function writeBrowserStorage(state: ZeroState) {
 }
 
 /** Spoof `zero://newtab` in the address bar for the MVP demo.
- *  Real `zero://` protocol lands in Phase 2 (AboutNewTab + nsIProtocolHandler). */
+ *  Hash-tabanli: sayfa yolu (/) degismedigi icin reload + relative asset
+ *  cozulmesi bozulmaz. Gercek `zero://` protokolu Phase 2'de
+ *  (AboutNewTab + nsIProtocolHandler) gelecek. */
 export function spoofZeroUrl() {
   try {
-    window.history.replaceState(null, '', '/zero://newtab');
+    window.history.replaceState(null, '', '#zero://newtab');
   } catch {
     /* file:// / moz-extension:// may reject — non-fatal */
   }

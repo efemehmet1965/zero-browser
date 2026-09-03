@@ -22,6 +22,9 @@ export default function ZeroLogo({ compact = false }: { compact?: boolean }) {
         <g transform="translate(268, 62)">
           <circle cx="42" cy="0" r="44" stroke="#fff" strokeWidth="20" fill="none" />
           {/* mask the gap then paint red dash: 20deg opening */}
+          {/* Beyaz halka + sag-ustte kisa kirmizi kesik (~20 derece).
+              Cevre = 2*pi*44 ~ 276.5; 20 birim kirmizi, gerisi bosluk.
+              rotate(300) kesigi sag-uste ortalar. */}
           <circle
             cx="42"
             cy="0"
@@ -29,10 +32,10 @@ export default function ZeroLogo({ compact = false }: { compact?: boolean }) {
             stroke="#E30613"
             strokeWidth="22"
             fill="none"
-            strokeDasharray="248 28.6"
-            strokeDashoffset="-32"
+            strokeDasharray="20 256.5"
+            strokeDashoffset="0"
             strokeLinecap="butt"
-            transform="rotate(-18 42 0)"
+            transform="rotate(300 42 0)"
           />
         </g>
       </svg>
