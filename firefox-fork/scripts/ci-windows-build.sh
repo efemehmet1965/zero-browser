@@ -16,14 +16,10 @@ test -d "$ESR/browser/branding/official" || { echo "HATA: official branding yok"
 ls "$ESR/browser/branding/official"
 rm -rf "$ESR/browser/branding/zero"
 mkdir -p "$ESR/browser/branding/zero"
-cp "$ESR/browser/branding/official/"* "$ESR/browser/branding/zero/"
-for f in brand.properties brand.dtd brand.ftl; do
-  if [ -f "$ESR/browser/branding/zero/$f" ]; then
-    sed -i 's/Firefox/ZERO/g' "$ESR/browser/branding/zero/$f"
-  else
-    echo "not: $f yok, atlandi"
-  fi
-done
+cp -r "$ESR/browser/branding/official/"* "$ESR/browser/branding/zero/"
+echo "-- brand dosyalari:"
+find "$ESR/browser/branding/zero" -name "brand*" -o -name "*.dtd" -o -name "*.ftl" | head -10
+find "$ESR/browser/branding/zero" \( -name "brand*" -o -name "*.dtd" -o -name "*.ftl" \) -exec sed -i 's/Firefox/ZERO/g' {} +
 
 echo "== prefs =="
 if ! grep -q "ZERO defaults" "$ESR/browser/app/profile/firefox.js"; then
