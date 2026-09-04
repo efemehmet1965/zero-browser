@@ -40,7 +40,7 @@ jobs:
       - name: ESR kaynagi
         run: |
           $ErrorActionPreference = 'Stop'
-          hg clone https://hg.mozilla.org/releases/mozilla-esr128 firefox-esr
+          hg clone https://hg.mozilla.org/releases/mozilla-esr140 firefox-esr
           if (-not (Test-Path firefox-esr/browser/app/profile/firefox.js)) { throw "clone eksik gorunuyor" }
 
       - name: Newtab derle + XPI paketle

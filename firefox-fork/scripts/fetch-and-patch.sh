@@ -6,7 +6,7 @@ set -euo pipefail
 # Script firefox-esr icine cd yaptigi icin repo yolunu EN BASTA mutlakla
 FORKDIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 
-ESR=128
+ESR=140
 WORK="$HOME/zero-build"
 
 sudo apt update && sudo apt install -y python3 mercurial nodejs git curl
