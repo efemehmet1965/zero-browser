@@ -11,15 +11,9 @@ ZERO="$WS/zero"
 echo "== mozconfig =="
 cp "$ZERO/firefox-fork/mozconfig-windows" "$ESR/.mozconfig"
 
-echo "== branding (official -> zero) =="
-test -d "$ESR/browser/branding/official" || { echo "HATA: official branding yok"; ls "$ESR/browser/branding"; exit 1; }
-ls "$ESR/browser/branding/official"
-rm -rf "$ESR/browser/branding/zero"
-mkdir -p "$ESR/browser/branding/zero"
-cp -r "$ESR/browser/branding/official/"* "$ESR/browser/branding/zero/"
-echo "-- brand dosyalari:"
-find "$ESR/browser/branding/zero" -name "brand*" -o -name "*.dtd" -o -name "*.ftl" | head -10
-find "$ESR/browser/branding/zero" \( -name "brand*" -o -name "*.dtd" -o -name "*.ftl" \) -exec sed -i 's/Firefox/ZERO/g' {} +
+echo "== branding kontrol (PowerShell adiminda hazirlanir) =="
+test -d "$ESR/browser/branding/zero" || { echo "HATA: zero branding yok"; exit 1; }
+grep -rq ZERO "$ESR/browser/branding/zero/locales/en-US/brand.properties" 2>/dev/null || echo "uyari: brand.properties ZERO icermiyor (devam)"
 
 echo "== prefs =="
 if ! grep -q "ZERO defaults" "$ESR/browser/app/profile/firefox.js"; then

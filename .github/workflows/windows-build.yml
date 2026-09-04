@@ -59,6 +59,21 @@ jobs:
           if (-not (Test-Path "zero-newtab@example.com.xpi")) { throw "XPI olusmadi" }
           cd $env:GITHUB_WORKSPACE
 
+      - name: ZERO branding (PowerShell)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = 'firefox-esr/browser/branding/official'
+          $dst = 'firefox-esr/browser/branding/zero'
+          if (-not (Test-Path "$src/locales/en-US/brand.properties")) { throw "official branding beklenmedik yapida" }
+          Remove-Item -Recurse -Force $dst -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Copy-Item "$src/*" $dst -Recurse -Force
+          Get-ChildItem -Recurse -Path $dst -Include 'brand.*','*.dtd','*.ftl' | ForEach-Object {
+            (Get-Content $_.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $_.FullName -NoNewline:$false
+          }
+          if (-not (Select-String -Path "$dst/locales/en-US/brand.properties" -Pattern 'ZERO' -Quiet)) { throw "branding sed tutmadi" }
+          Write-Output "branding OK"
+
       - name: MozillaBuild kur
         run: |
           $ErrorActionPreference = 'Stop'
@@ -79,6 +94,8 @@ jobs:
       - name: Derle + paketle (MozillaBuild)
         run: |
           $ErrorActionPreference = 'Stop'
+          # Git/msys/cygwin PATH'ten cikar: MozillaBuild msys DLL'iyle capisip fork patlatiyor
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'Git|msys|cygwin|Strawberry|mingw' }) -join ';'
           $bash = Get-Content $env:RUNNER_TEMP\moz-bash.txt
           $env:ZERO_WS = ($env:GITHUB_WORKSPACE -replace '\\','/')
           & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"'
