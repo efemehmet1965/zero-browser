@@ -29,7 +29,8 @@ fi
 
 echo "== bootstrap + build + package =="
 cd "$ESR"
-./mach bootstrap --no-interactive --application-choice browser
+# NOT: ESR128 bootstrap --no-interactive kabul etmez; stdin kapali calisir.
+./mach bootstrap --application-choice browser < /dev/null
 ./mach build
 test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: firefox.exe uretilmedi"; exit 1; }
 ./mach package
