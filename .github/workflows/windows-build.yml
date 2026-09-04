@@ -116,13 +116,16 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           cd firefox-esr
-          $zip = Get-ChildItem -Recurse obj-zero/dist -Filter "firefox-*.zip" | Select-Object -First 1
-          if (-not $zip) { Get-ChildItem obj-zero/dist; throw "paket zip bulunamadi" }
+          $zips = Get-ChildItem -Recurse obj-zero/dist -Filter "firefox-*.zip"
+          $zips | Select-Object Name, Length | Out-String | Write-Output
+          $zip = $zips | Where-Object { $_.Name -notmatch 'xpt|artifact' } | Select-Object -First 1
+          if (-not $zip) { throw "paket zip bulunamadi" }
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
           Expand-Archive $zip.FullName $tmp
-          $fw = Get-ChildItem $tmp -Directory | Select-Object -First 1
-          if (-not (Test-Path "$($fw.FullName)/firefox.exe")) { throw "pakette firefox.exe yok" }
+          $exe = Get-ChildItem -Recurse $tmp -Filter "firefox.exe" | Select-Object -First 1
+          if (-not $exe) { Get-ChildItem $tmp; throw "pakette firefox.exe yok" }
+          $fw = $exe.Directory
           New-Item -ItemType Directory -Force "$($fw.FullName)/distribution/extensions" | Out-Null
           Copy-Item "$env:GITHUB_WORKSPACE/zero/extension/zero-newtab@example.com.xpi" "$($fw.FullName)/distribution/extensions/" -Force
           if (-not (Test-Path "$($fw.FullName)/distribution/extensions/zero-newtab@example.com.xpi")) { throw "XPI kopyalanamadi" }
