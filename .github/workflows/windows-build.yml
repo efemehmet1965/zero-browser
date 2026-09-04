@@ -96,6 +96,18 @@ jobs:
           $ErrorActionPreference = 'Stop'
           # Git/msys/cygwin PATH'ten cikar: MozillaBuild msys DLL'iyle capisip fork patlatiyor
           $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'Git|msys|cygwin|Strawberry|mingw' }) -join ';'
+          $env:MOZILLABUILD = 'C:\mozilla-build'
+          # mach'in shebang'i python3 ister; Windows Python'unda sadece python.exe var
+          $mbPy = Get-ChildItem -Recurse -Path C:\mozilla-build -Filter python3.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($mbPy) {
+            $env:PATH = "$($mbPy.DirectoryName);" + $env:PATH
+          } else {
+            $py12 = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $py12) { throw "python3 icin kaynak bulunamadi" }
+            Copy-Item $py12.FullName (Join-Path $py12.DirectoryName 'python3.exe') -Force
+            $env:PATH = "$($py12.DirectoryName);" + $env:PATH
+          }
+          where.exe python3
           $bash = Get-Content $env:RUNNER_TEMP\moz-bash.txt
           $env:ZERO_WS = ($env:GITHUB_WORKSPACE -replace '\\','/')
           & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"'
