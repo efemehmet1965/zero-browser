@@ -4,5 +4,7 @@ ac_add_options --enable-application=browser
 ac_add_options --disable-tests
 ac_add_options --enable-artifact-builds
 ac_add_options --with-branding=browser/branding/zero
+# Binary + profil klasoru adi: firefox.exe -> zero.exe
+ac_add_options --with-app-name=zero
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-zero
 mk_add_options MOZ_MAKE_FLAGS="-j4"

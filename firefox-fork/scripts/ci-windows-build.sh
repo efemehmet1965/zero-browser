@@ -32,7 +32,7 @@ cd "$ESR"
 # NOT: ESR128 bootstrap --no-interactive kabul etmez; stdin kapali calisir.
 ./mach bootstrap --application-choice browser < /dev/null
 ./mach build
-test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: firefox.exe uretilmedi"; exit 1; }
+test -f obj-zero/dist/bin/zero.exe || test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: zero.exe/firefox.exe uretilmedi"; exit 1; }
 ./mach package
 echo "== system addon dogrulama (omni.ja) =="
 python3 -c "import glob,zipfile; cs=glob.glob('obj-zero/dist/**/omni.ja', recursive=True); print('omni:',cs); assert cs,'omni.ja bulunamadi'; hit=[(c,n) for c in cs for n in zipfile.ZipFile(c).namelist() if 'builtin-addons/zero-newtab/dist/index.html' in n]; assert hit,f'system addon pakette yok'; print('system addon OK:',hit[0])"
