@@ -16,7 +16,7 @@ export const MODES: Record<ModeId, ModeDef> = {
     tagline: 'Günlük kullanım: hızlı, sade, dengeli gizlilik.',
     dot: '#E30613',
     builtins: [
-      std('sc-blog', 'ZERO Blog', 'https://example.com/blog', 'Z'),
+      std('sc-repo', 'ZERO Repo', 'https://github.com/efemehmet1965/zero-browser', 'Z'),
       std('sc-x', 'X', 'https://x.com', 'X'),
       std('sc-github', 'GitHub', 'https://github.com', 'GH'),
       std('sc-notion', 'Notion', 'https://notion.so', 'N'),

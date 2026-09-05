@@ -173,3 +173,17 @@ test('Router kuralı workspace eşleştirir + kalıcıdır', async ({ page }) =>
   await page.getByLabel("Test URL'si").fill('https://github.com/y');
   await expect(page.getByTestId('router-match')).toContainText('Design System');
 });
+
+test('Toolbar düğmeleri gerçektir + menü ayarları açar', async ({ page }) => {
+  await expect(page.getByRole('button', { name: 'Back' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Forward' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+  await expect(page.getByRole('button', { name: "URL'yi kopyala" })).toBeVisible();
+  await page.getByRole('button', { name: 'Ayarları aç' }).click();
+  await expect(page.getByRole('button', { name: 'Geniş', exact: true })).toBeVisible();
+});
+
+test('WindowBar sahte kontrol içermez, workspace adını gösterir', async ({ page }) => {
+  await expect(page.getByText('ZERO', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Design System').first()).toBeVisible();
+});

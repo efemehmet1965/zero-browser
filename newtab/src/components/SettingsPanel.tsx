@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import type { TabsPosition, TabsWidth, ZeroSettings } from '../settings/schema';
 
 // ZERO ayar paneli — sekme konumu/genişliği/hover buradan değişir,
 // useZeroSettings üzerinden IndexedDB+localStorage'a yazılır, reload'da korunur.
+// Toolbar'daki ••• düğmesi 'zero:open-settings' olayıyla paneli açar.
 
 export default function SettingsPanel({
   settings,
@@ -15,9 +17,26 @@ export default function SettingsPanel({
 
   const pos: TabsPosition[] = ['left', 'right'];
   const widths: TabsWidth[] = ['narrow', 'wide'];
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const h = () => {
+      setOpen(true);
+      requestAnimationFrame(() => {
+        document.getElementById('zero-settings')?.scrollIntoView({ block: 'nearest' });
+      });
+    };
+    window.addEventListener('zero:open-settings', h);
+    return () => window.removeEventListener('zero:open-settings', h);
+  }, []);
 
   return (
-    <details className="mt-6 w-full max-w-[640px] rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] p-4">
+    <details
+      id="zero-settings"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+      className="mt-6 w-full max-w-[640px] scroll-mt-8 rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] p-4"
+    >
       <summary className="cursor-pointer list-none text-center text-[12px] text-[#888] hover:text-white" aria-label="ZERO ayarları">
         ⚙ ZERO ayarları
       </summary>

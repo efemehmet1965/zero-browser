@@ -36,7 +36,7 @@ test('kenar cubugu + sekmeler + tagline gorunur', async ({ page }) => {
 });
 
 test('kisayollar listelenir, ekleme kalici olur, silme calisir', async ({ page }) => {
-  for (const name of ['ZERO Blog', 'X', 'GitHub', 'Notion', 'Drive', 'Mail']) {
+  for (const name of ['ZERO Repo', 'X', 'GitHub', 'Notion', 'Drive', 'Mail']) {
     await expect(page.getByText(name, { exact: true })).toBeVisible();
   }
   // Ekle
@@ -70,7 +70,7 @@ test('workspace hapleri aktif degistirir + hatirlar', async ({ page }) => {
 test('modlar kisayol setini ve paneli degistirir + hatirlar', async ({ page }) => {
   const mode = () => page.evaluate(() => JSON.parse(localStorage.getItem('zero.state.v2') ?? '{}').activeModeId);
   expect(await mode()).toBe('standard');
-  await expect(page.getByText('ZERO Blog', { exact: true })).toBeVisible();
+  await expect(page.getByText('ZERO Repo', { exact: true })).toBeVisible();
   // Developer
   await page.getByRole('tab', { name: 'Developer' }).click();
   expect(await mode()).toBe('developer');

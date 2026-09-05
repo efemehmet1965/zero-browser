@@ -21,7 +21,7 @@ const SEED = {
     { id: 'ws-launch', name: 'Product Launch', color: '#8A8A8A', tabs: [] },
   ],
   shortcuts: [
-    { id: 'sc-blog', name: 'ZERO Blog', url: 'https://example.com/blog', icon: 'Z', kind: 'builtin' },
+    { id: 'sc-repo', name: 'ZERO Repo', url: 'https://github.com/efemehmet1965/zero-browser', icon: 'Z', kind: 'builtin' },
     { id: 'sc-x', name: 'X', url: 'https://x.com', icon: 'X', kind: 'builtin' },
     { id: 'sc-github', name: 'GitHub', url: 'https://github.com', icon: 'GH', kind: 'builtin' },
     { id: 'sc-notion', name: 'Notion', url: 'https://notion.so', icon: 'N', kind: 'builtin' },

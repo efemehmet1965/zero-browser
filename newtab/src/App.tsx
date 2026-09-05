@@ -15,17 +15,9 @@ import { useZeroSettings } from './settings/useZeroSettings';
 import { useZeroState } from './store';
 import { useMemo, useState } from 'react';
 
-// ZERO newtab — Faz 2: dikey sekmeler + mod teması.
-// Layout: WindowBar / Toolbar / [sekmeler+Sidebar | içerik].
-// Sekmeler sol/sağ, dar/geniş ayarlanır (zero.settings.v1). WindowBar
-// Faz 4'te sadeleşecek; testler Bozulmasın diye şimdilik yerinde durur.
-const DEMO_TABS: VTab[] = [
-  { id: 't-new', title: 'New Tab', url: 'zero://newtab', active: true },
-  { id: 't-work', title: 'Work', url: 'zero://workspace/work' },
-  { id: 't-design', title: 'Design Inspiration', url: 'zero://workspace/design' },
-  { id: 't-news', title: 'ZERO News', url: 'https://example.com/blog' },
-];
-
+// ZERO newtab — dikey sekmeler + mod teması.
+// Layout: WindowBar (marka) / Toolbar (gerçek adres çubuğu) / [sekmeler+Sidebar | içerik].
+// Sekmeler workspace'ten gelir (örnek veri yedeği yok); konum/genişlik ayarlardan.
 export default function App() {
   const { state, setActiveWorkspace, setMode, addShortcut, removeShortcut } = useZeroState();
   const { settings, setMode: setSettingsMode, setTabs } = useZeroSettings();
@@ -41,8 +33,7 @@ export default function App() {
       url: t.url,
       active: i === 0,
     }));
-    const base = fromWs.length > 0 ? fromWs : DEMO_TABS;
-    return base.filter((t) => !closed.includes(t.id));
+    return fromWs.filter((t) => !closed.includes(t.id));
   }, [state.workspaces, state.activeWorkspaceId, closed]);
 
   const handleMode = (id: typeof mode.id) => {
@@ -52,10 +43,12 @@ export default function App() {
 
   const panelRight = settings.tabsPosition === 'right';
 
+  const activeWs = state.workspaces.find((w) => w.id === state.activeWorkspaceId);
+
   return (
     <div className="flex h-full flex-col bg-black text-white">
-      <WindowBar />
-      <Toolbar />
+      <WindowBar workspace={activeWs?.name} />
+      <Toolbar accent={mode.dot} />
       <div className="flex min-h-0 flex-1 border-t border-[#1E1E1E]">
         {!panelRight && (
           <aside className="flex shrink-0 border-r border-[#1E1E1E] bg-[#0A0A0A]">
