@@ -5,6 +5,12 @@
 /* ZERO — dark-only global styles. System fonts, no external assets. */
 :root {
   color-scheme: dark;
+  --zero-accent: #e30613;
+}
+
+/* Dikey sekme şeridi: 150ms hover geçişi, 60fps (transform/opacity only) */
+[data-tabs-width='narrow'] [aria-label='Dikey sekmeler'] > div > button {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
 html,

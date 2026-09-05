@@ -58,7 +58,8 @@ test -f "$SA/extension/dist/index.html"
 # ZERO platform modulu (browser/zero) + derleme kancasi
 rm -rf browser/zero
 mkdir -p browser/zero
-cp "$FORKDIR/src/browser/zero/ZeroMode.sys.mjs" "$FORKDIR/src/browser/zero/moz.build" browser/zero/
+cp "$FORKDIR"/src/browser/zero/*.sys.mjs browser/zero/
+cp "$FORKDIR/src/browser/zero/moz.build" browser/zero/
 grep -q '"zero"' browser/moz.build || echo 'DIRS += ["zero"]' >> browser/moz.build
 
 # ZERO varsayilan ayarlari (tek seferlik, tekrar calistirmaya dayanikli)
@@ -69,6 +70,9 @@ for pref in \
   'pref("app.shield.optoutstudies.enabled", false);' \
   'pref("xpinstall.signatures.required", false);' \
   'pref("zero.mode.active", "standard");' \
+  'pref("zero.tabs.position", "left");' \
+  'pref("zero.tabs.width", "narrow");' \
+  'pref("zero.tabs.hover", true);' \
 ; do
   key=$(echo "$pref" | sed 's/pref("//; s/",.*//')
   grep -qF "$key" browser/app/profile/firefox.js || echo "$pref // ZERO" >> browser/app/profile/firefox.js

@@ -1,20 +1,43 @@
 import { useEffect, useState } from 'react';
 
 // Geri sayim — hedef tarih/saate kalan gun/saat/dakika/saniye, canli.
+// Hedef zero.countdown.target'ta saklanır (Gün Planı okur).
+export const COUNTDOWN_KEY = 'zero.countdown.target';
+
+function defaultTarget(): string {
+  try {
+    const saved = localStorage.getItem(COUNTDOWN_KEY);
+    if (saved && !isNaN(new Date(saved).getTime())) return saved;
+  } catch { /* yoksay */ }
+  const d = new Date(Date.now() + 86400000);
+  const p = (x: number) => String(x).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+export function readCountdownTarget(): string | null {
+  try {
+    return localStorage.getItem(COUNTDOWN_KEY);
+  } catch {
+    return null;
+  }
+}
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export default function CountdownTool() {
-  const [target, setTarget] = useState(() => {
-    const d = new Date(Date.now() + 86400000);
-    const p = (x: number) => String(x).padStart(2, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
-  });
+  const [target, setTarget] = useState(defaultTarget);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
     const t = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COUNTDOWN_KEY, target);
+      window.dispatchEvent(new CustomEvent('zero:countdown'));
+    } catch { /* yoksay */ }
+  }, [target]);
 
   const diff = Math.max(0, new Date(target).getTime() - now);
   const d = Math.floor(diff / 86400000);

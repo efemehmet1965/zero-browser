@@ -3,7 +3,7 @@ import { copyText } from './copy';
 
 // URL temizleyici — izleme parametrelerini sokup atar (utm_*, fbclid, gclid...).
 // Paylasmadan once linki sterilize eder. Tamami istemcide.
-const TRACKERS = [
+export const TRACKERS = [
   /^utm_/i, /^fbclid$/i, /^gclid$/i, /^gbraid$/i, /^wbraid$/i, /^msclkid$/i,
   /^ttclid$/i, /^twclid$/i, /^igshid$/i, /^mc_cid$/i, /^mc_eid$/i, /^_ga$/i,
   /^dclid$/i, /^yclid$/i, /^vero_/i, /^sfr_/i, /^oly_/i, /^_hsenc$/i,

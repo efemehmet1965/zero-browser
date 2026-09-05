@@ -19,6 +19,38 @@ jobs:
         with:
           path: zero
 
+      - name: On dogrulama (fail-fast)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $need = @(
+            'zero/newtab/src/settings/schema.ts',
+            'zero/newtab/src/settings/useZeroSettings.ts',
+            'zero/newtab/src/lib/db.ts',
+            'zero/newtab/src/components/VerticalTabs.tsx',
+            'zero/newtab/src/components/tools/send.ts',
+            'zero/newtab/src/components/tools/tezgahOps.ts',
+            'zero/newtab/src/components/tools/Tezgah.tsx',
+            'zero/newtab/src/components/tools/LinkFilter.tsx',
+            'zero/newtab/src/components/tools/GunPlani.tsx',
+            'zero/newtab/tests/pro.spec.ts',
+            'zero/firefox-fork/src/browser/zero/ZeroMode.sys.mjs',
+            'zero/firefox-fork/src/browser/zero/ZeroChrome.sys.mjs',
+            'zero/firefox-fork/src/browser/zero/ZeroPrefs.sys.mjs',
+            'zero/chrome/userChrome.css',
+            'zero/chrome/userContent.css'
+          )
+          $missing = @($need | Where-Object { -not (Test-Path (Join-Path $env:GITHUB_WORKSPACE $_)) })
+          if ($missing.Count -gt 0) { throw ('eksik dosyalar: ' + ($missing -join ', ')) }
+          $mb = Get-Content "$env:GITHUB_WORKSPACE/zero/firefox-fork/src/browser/zero/moz.build" -Raw
+          foreach ($f in @('ZeroMode.sys.mjs', 'ZeroChrome.sys.mjs', 'ZeroPrefs.sys.mjs')) {
+            if ($mb -notmatch [regex]::Escape($f)) { throw "moz.build $f satiri yok" }
+          }
+          $uc = Get-Content "$env:GITHUB_WORKSPACE/zero/chrome/userChrome.css" -Raw
+          if ($uc -notmatch 'zero-newtab') { throw 'userChrome zero-newtab kurali yok' }
+          $mbext = Get-Content "$env:GITHUB_WORKSPACE/zero/firefox-fork/system-addon/zero-newtab/moz.build" -Raw
+          if ($mbext -notmatch 'zero-newtab') { throw 'system-addon moz.build bozuk' }
+          Write-Output 'on-dogrulama OK'
+
       - name: Arac kontrol (hg, node)
         run: |
           $ErrorActionPreference = 'Stop'
@@ -40,8 +72,27 @@ jobs:
       - name: ESR kaynagi
         run: |
           $ErrorActionPreference = 'Stop'
-          hg clone https://hg.mozilla.org/releases/mozilla-esr140 firefox-esr
-          if (-not (Test-Path firefox-esr/browser/app/profile/firefox.js)) { throw "clone eksik gorunuyor" }
+          $ok = $false
+          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
+            try {
+              if (Test-Path firefox-esr) { Remove-Item -Recurse -Force firefox-esr }
+              hg clone https://hg.mozilla.org/releases/mozilla-esr140 firefox-esr
+              if (-not (Test-Path firefox-esr/browser/app/profile/firefox.js)) { throw 'clone eksik gorunuyor' }
+              $ok = $true
+            } catch {
+              Write-Output "klon deneme $i basarisiz: $($_.Exception.Message)"
+              if ($i -eq 3) { throw }
+              Start-Sleep -Seconds 30
+            }
+          }
+          hg --cwd firefox-esr id -i
+
+      - name: Node kur (npm cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: zero/newtab/package-lock.json
 
       - name: Newtab derle + system addon iskeleti
         run: |
@@ -68,10 +119,11 @@ jobs:
           Write-Output "system addon iskelet OK"
           # ZERO platform modulu (derlemeye gomulu JS servisi)
           New-Item -ItemType Directory -Force firefox-esr/browser/zero | Out-Null
-          Copy-Item zero/firefox-fork/src/browser/zero/ZeroMode.sys.mjs,zero/firefox-fork/src/browser/zero/moz.build firefox-esr/browser/zero/ -Force
+          Copy-Item zero/firefox-fork/src/browser/zero/*.sys.mjs firefox-esr/browser/zero/ -Force; if ($?) { Copy-Item zero/firefox-fork/src/browser/zero/moz.build firefox-esr/browser/zero/ -Force }
           $bm = 'firefox-esr/browser/moz.build'
           if ((Get-Content $bm -Raw) -notmatch 'DIRS \+= \["zero"\]') { Add-Content $bm 'DIRS += ["zero"]' }
           if (-not (Test-Path firefox-esr/browser/zero/ZeroMode.sys.mjs)) { throw "platform modulu kopyalanamadi" }
+          if (-not (Test-Path firefox-esr/browser/zero/ZeroChrome.sys.mjs)) { throw "ZeroChrome kopyalanamadi" }
 
       - name: ZERO branding (PowerShell)
         run: |
@@ -99,7 +151,17 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if (-not (Test-Path C:\mozilla-build)) {
-            Invoke-WebRequest -Uri https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe -OutFile $env:RUNNER_TEMP\mb-setup.exe
+            $dlOk = $false
+            for ($i = 1; $i -le 3 -and -not $dlOk; $i++) {
+              try {
+                Invoke-WebRequest -Uri https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe -OutFile $env:RUNNER_TEMP\mb-setup.exe
+                $dlOk = $true
+              } catch {
+                Write-Output "mb indirme deneme $i basarisiz"
+                if ($i -eq 3) { throw }
+                Start-Sleep -Seconds 15
+              }
+            }
             Start-Process $env:RUNNER_TEMP\mb-setup.exe -ArgumentList '/S' -Wait
           }
           $bash = Get-ChildItem -Recurse -Path C:\mozilla-build -Filter bash.exe -ErrorAction SilentlyContinue |
@@ -131,7 +193,10 @@ jobs:
           where.exe python3
           $bash = Get-Content $env:RUNNER_TEMP\moz-bash.txt
           $env:ZERO_WS = ($env:GITHUB_WORKSPACE -replace '\\','/')
-          & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"'
+          & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"' > "$env:RUNNER_TEMP/zero-build.log" 2>&1
+          $code = $LASTEXITCODE
+          Get-Content "$env:RUNNER_TEMP/zero-build.log" -Tail 60 | Out-String | Write-Output
+          if ($code -ne 0) { throw "derleme patladi (exit $code) — tam log artifact'ta (zero-build-log)" }
 
       - name: Distribution ekle + yukle
         run: |
@@ -203,6 +268,16 @@ jobs:
               });
             } catch (e) {}
           })();
+          // ZERO chrome bootstrap: newtab aktifken native bari gizle (Zen-tarzi).
+          // ZeroChrome omni.ja icinde yoksa sessizce atla (artifact build toleransi).
+          try {
+            var zc = ChromeUtils.importESModule("resource://app/modules/zero/ZeroChrome.sys.mjs");
+            var wm2 = Components.classes["@mozilla.org/appshell/window-mediator;1"].getService(Components.interfaces.nsIWindowMediator);
+            var _hook = function(w) { try { zc.ZeroChrome.init(w); } catch (e) {} };
+            var _en = wm2.getEnumerator("navigator:browser");
+            while (_en.hasMoreElements()) _hook(_en.getNext().QueryInterface(Components.interfaces.nsIDOMWindow));
+            Services.obs.addObserver(function(w) { _hook(w); }, "browser-delayed-startup-finished");
+          } catch (e) {}
           '@
           if (-not (Test-Path "$($fw.FullName)/mozilla.cfg")) { throw "autoconfig yazilamadi" }
           Write-Output "tema + politika + autoconfig OK"
@@ -212,8 +287,25 @@ jobs:
           if ($size -lt 50MB) { throw "paket supheli derecede kucuk ($size bayt)" }
           cd $env:GITHUB_WORKSPACE
 
-      - name: Yukle
+      - name: SHA256
+        if: success()
+        run: |
+          $ErrorActionPreference = 'Stop'
+          (Get-FileHash "${{ runner.temp }}/zero-windows.zip" -Algorithm SHA256).Hash | Set-Content "${{ runner.temp }}/zero-windows.zip.sha256"
+          Get-Content "${{ runner.temp }}/zero-windows.zip.sha256"
+
+      - name: Yukle (zip+sha)
         uses: actions/upload-artifact@v4
         with:
           name: zero-windows
-          path: ${{ runner.temp }}/zero-windows.zip
+          path: |
+            ${{ runner.temp }}/zero-windows.zip
+            ${{ runner.temp }}/zero-windows.zip.sha256
+
+      - name: Yukle (build log)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-build-log
+          path: ${{ runner.temp }}/zero-build.log
+          if-no-files-found: warn

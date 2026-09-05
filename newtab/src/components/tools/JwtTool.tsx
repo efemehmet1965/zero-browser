@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { sendTo } from './send';
 
 // JWT cozucu — header/payload gosterir. Imza DOGRULANMAZ (anahtar bizde yok),
 // bunu acikca yazar. Tamami istemcide.
@@ -41,6 +42,14 @@ export default function JwtTool() {
         </div>
       )}
       {parsed.exp && <p className="mt-2 text-[12px] text-[#888]">Süre sonu: {parsed.exp}</p>}
+      {!parsed.err && (
+        <button
+          onClick={() => sendTo('json', parsed.payload)}
+          className="mt-2 rounded-lg border border-[#2A2A2A] px-3 py-1.5 text-[12px] text-[#CCC] hover:text-white"
+        >
+          Payload'u JSON'a gönder →
+        </button>
+      )}
     </div>
   );
 }

@@ -20,11 +20,13 @@ import EncoderLab from './tools/EncoderLab';
 import EncryptTool from './tools/EncryptTool';
 import FileAnalyzer from './tools/FileAnalyzer';
 import GitignoreTool from './tools/GitignoreTool';
+import GunPlani from './tools/GunPlani';
 import HashTool from './tools/HashTool';
 import JsonTool from './tools/JsonTool';
 import JwtTool from './tools/JwtTool';
 import KdvTool from './tools/KdvTool';
 import LeakPanel from './tools/LeakPanel';
+import LinkFilter from './tools/LinkFilter';
 import LfiGenerator from './tools/LfiGenerator';
 import LoanTool from './tools/LoanTool';
 import LoremTool from './tools/LoremTool';
@@ -44,6 +46,7 @@ import SqliHelper from './tools/SqliHelper';
 import RegexTool from './tools/RegexTool';
 import ReverseShell from './tools/ReverseShell';
 import SubnetTool from './tools/SubnetTool';
+import Tezgah from './tools/Tezgah';
 import TimestampTool from './tools/TimestampTool';
 import UnitConverter from './tools/UnitConverter';
 import UrlCleaner from './tools/UrlCleaner';
@@ -99,6 +102,7 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
   if (mode === 'standard') {
     return (
       <Shell blurb={blurb}>
+        <GunPlani />
         <UnitConverter />
         <QuickNote />
         <Pomodoro />
@@ -151,6 +155,7 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
   if (mode === 'cyber') {
     return (
       <Shell blurb={blurb}>
+        <Tezgah />
         <DorkGenerator />
         <XssGenerator />
         <SqliHelper />
@@ -178,6 +183,7 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
 
   return (
     <Shell blurb={blurb}>
+      <LinkFilter />
       <UrlCleaner />
       <EncryptTool />
       <BreachCheck />

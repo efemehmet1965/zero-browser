@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { sendTo } from './send';
 
 // URL ayristirici — protokol/host/port/yol/parametre/hash tablosu.
 export default function UrlParserTool() {
@@ -40,6 +41,14 @@ export default function UrlParserTool() {
             </div>
           ))}
         </div>
+      )}
+      {!r.err && r.params.length > 0 && (
+        <button
+          onClick={() => sendTo('regex', r.params.map(([, v]) => v).join('\n'))}
+          className="mt-2 rounded-lg border border-[#2A2A2A] px-3 py-1.5 text-[12px] text-[#CCC] hover:text-white"
+        >
+          Parametreleri Regex'e gönder →
+        </button>
       )}
     </div>
   );

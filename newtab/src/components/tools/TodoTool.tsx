@@ -1,18 +1,37 @@
 import { useEffect, useState } from 'react';
 
 // Yapilacaklar — tikle bitir, sil, hepsi localStorage'da durur.
-const KEY = 'zero.todos';
-interface Item { id: string; text: string; done: boolean; }
+// Gün Planı ile çift yönlü canlı senkron (zero:todos olayı).
+export const KEY = 'zero.todos';
+export interface TodoItem { id: string; text: string; done: boolean; }
+
+export function readTodos(): TodoItem[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function TodoTool() {
-  const [items, setItems] = useState<Item[]>(() => {
-    try { return JSON.parse(localStorage.getItem(KEY) ?? '[]'); } catch { return []; }
-  });
+  const [items, setItems] = useState<TodoItem[]>(readTodos);
   const [draft, setDraft] = useState('');
 
   useEffect(() => {
     try { localStorage.setItem(KEY, JSON.stringify(items)); } catch { /* yoksay */ }
+    try { window.dispatchEvent(new CustomEvent('zero:todos')); } catch { /* yoksay */ }
   }, [items]);
+
+  // Gün Planı'ndan eklenen maddeleri canlı al (aynı içerikse dokunma — döngü yok)
+  useEffect(() => {
+    const h = () => {
+      const cur = readTodos();
+      setItems((prev) => (JSON.stringify(prev) === JSON.stringify(cur) ? prev : cur));
+    };
+    window.addEventListener('zero:todos', h);
+    return () => window.removeEventListener('zero:todos', h);
+  }, []);
 
   const add = () => {
     const t = draft.trim();

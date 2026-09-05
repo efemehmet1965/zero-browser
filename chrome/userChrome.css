@@ -1,4 +1,4 @@
-/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
+﻿/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
  *
  * Install: about:config → toolkit.legacyUserProfileCustomizations.stylesheets = true,
  * then copy this file + userContent.css into <profile>/chrome/ and restart.
@@ -174,3 +174,29 @@
 #nav-bar::after {
   display: none !important;
 }
+
+/* === ZERO distinct browser layout (Zen-style) === */
+/* Amaç: yatay Firefox sekme şeridini tamamen kaldır, tek parça ZERO görünümü.
+   Newtab içindeki sahte WindowBar/Toolbar artık ASIL bar olur, çift bar biter. */
+
+/* 1. Yatay tab bar yok: dikey/sidebar düzen */
+#TabsToolbar { display: none !important; }
+#titlebar { appearance: none !important; background: #000 !important; }
+
+/* 2. Nav-bar kompakt hap: newtab dışında gezinme için tek satır */
+#nav-bar {
+  background: #000 !important;
+  padding: 6px 10px !important;
+  min-height: 48px !important;
+}
+#nav-bar #urlbar-container { max-width: 640px !important; margin: 0 auto !important; }
+
+/* Firefox kalıntılarını gizle: cep, liste, sponsor */
+#pocket-button, #fxa-toolbar-menu-button, #overflow-button { display: none !important; }
+
+/* 3. Newtab aktifken native nav-bar da gizlenir (ZeroChrome.sys.mjs
+   :root üzerine zero-newtab="true" koyar). Böylece sadece React Toolbar görünür. */
+:root[zero-newtab="true"] #nav-bar,
+:root[zero-newtab="true"] #PersonalToolbar { display: none !important; }
+:root[zero-newtab="true"] #navigator-toolbox { border-bottom: none !important; }
+

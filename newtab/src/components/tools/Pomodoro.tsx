@@ -1,6 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Pomodoro — odak/mola donguleri. Bitince baslik + yazi bildirir.
+// Biten odak seansları zero.pomo.log'a yazılır (Gün Planı okur, son 100).
+export const POMO_KEY = 'zero.pomo.log';
+export interface PomoSession { t: number; mins: number; kind: string; }
+
+export function readPomoLog(): PomoSession[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(POMO_KEY) ?? '[]');
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+export function todayFocusMinutes(now = Date.now()): number {
+  const day = new Date(now).toDateString();
+  return readPomoLog()
+    .filter((s) => new Date(s.t).toDateString() === day)
+    .reduce((a, s) => a + s.mins, 0);
+}
 const PRESETS = [['Odak', 25], ['Kısa mola', 5], ['Uzun mola', 15]] as const;
 const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
@@ -10,6 +29,9 @@ export default function Pomodoro() {
   const [run, setRun] = useState(false);
   const [done, setDone] = useState(false);
   const timer = useRef<number | null>(null);
+  const loggedRef = useRef(false);
+  const totalRef = useRef(total);
+  totalRef.current = total;
 
   useEffect(() => {
     if (!run) return;
@@ -27,6 +49,20 @@ export default function Pomodoro() {
   }, [run]);
 
   const pick = (s: number) => { setRun(false); setDone(false); setTotal(s); setLeft(s); };
+
+  // Biten seansı bir kez kaydet (StrictMode çift çağrısına dayanıklı)
+  useEffect(() => {
+    if (done && !loggedRef.current) {
+      loggedRef.current = true;
+      try {
+        const log = readPomoLog();
+        log.push({ t: Date.now(), mins: Math.round(totalRef.current / 60), kind: 'odak' });
+        localStorage.setItem(POMO_KEY, JSON.stringify(log.slice(-100)));
+        window.dispatchEvent(new CustomEvent('zero:pomo'));
+      } catch { /* yoksay */ }
+    }
+    if (!done) loggedRef.current = false;
+  }, [done]);
 
   return (
     <div className="rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] p-5">

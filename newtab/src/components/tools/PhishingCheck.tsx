@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 
 // Oltalama (phishing) denetimi — URL'yi kurallarla inceler, riskleri siralar.
 // Ag cagrisi yok, saf metin analizi: protokol, IP, @ hilesi, punycode, uzunluk.
-function analyze(raw: string): { risks: string[]; level: 'temiz' | 'supheli' | 'riskli' } {
+export function analyze(raw: string): { risks: string[]; level: 'temiz' | 'supheli' | 'riskli' } {
   const risks: string[] = [];
   let u: URL;
   try {
