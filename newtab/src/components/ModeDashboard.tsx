@@ -1,6 +1,11 @@
 import { MODES } from '../modes';
 import type { ModeId } from '../types';
 import Base64Tool from './tools/Base64Tool';
+import BaseConverter from './tools/BaseConverter';
+import BreachCheck from './tools/BreachCheck';
+import ColorTool from './tools/ColorTool';
+import CronTool from './tools/CronTool';
+import CssUnits from './tools/CssUnits';
 import CvssCalculator from './tools/CvssCalculator';
 import DorkGenerator from './tools/DorkGenerator';
 import EncoderLab from './tools/EncoderLab';
@@ -10,12 +15,17 @@ import JsonTool from './tools/JsonTool';
 import JwtTool from './tools/JwtTool';
 import LeakPanel from './tools/LeakPanel';
 import LfiGenerator from './tools/LfiGenerator';
+import LoremTool from './tools/LoremTool';
 import PasswordGenerator from './tools/PasswordGenerator';
 import PayloadLibrary from './tools/PayloadLibrary';
+import PhishingCheck from './tools/PhishingCheck';
+import Pomodoro from './tools/Pomodoro';
+import QuickNote from './tools/QuickNote';
 import SqliHelper from './tools/SqliHelper';
 import RegexTool from './tools/RegexTool';
 import SubnetTool from './tools/SubnetTool';
 import TimestampTool from './tools/TimestampTool';
+import UnitConverter from './tools/UnitConverter';
 import UrlCleaner from './tools/UrlCleaner';
 import UuidTool from './tools/UuidTool';
 import XssGenerator from './tools/XssGenerator';
@@ -63,8 +73,17 @@ function Links({ children }: { children: React.ReactNode }) {
 }
 
 export default function ModeDashboard({ mode }: { mode: ModeId }) {
-  if (mode === 'standard') return null;
   const blurb = MODES[mode].tagline;
+
+  if (mode === 'standard') {
+    return (
+      <Shell blurb={blurb}>
+        <UnitConverter />
+        <QuickNote />
+        <Pomodoro />
+      </Shell>
+    );
+  }
 
   if (mode === 'developer') {
     return (
@@ -75,6 +94,11 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
         <TimestampTool />
         <UuidTool />
         <RegexTool />
+        <LoremTool />
+        <ColorTool />
+        <CronTool />
+        <BaseConverter />
+        <CssUnits />
         <Links>
           <Mini label="about:debugging" onClick={() => go('about:debugging')} />
           <Mini label="about:config" onClick={() => go('about:config')} />
@@ -120,6 +144,9 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
     <Shell blurb={blurb}>
       <UrlCleaner />
       <EncryptTool />
+      <BreachCheck />
+      <PhishingCheck />
+      <PasswordGenerator />
       <LeakPanel />
       <Links>
         <Mini label="about:protections" onClick={() => go('about:protections')} />

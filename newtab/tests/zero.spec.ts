@@ -171,6 +171,35 @@ test('siber cephanelik: XSS/SQLi/Encoder/LFI/CVSS/kutuphane', async ({ page }) =
   await expect(page.getByText('169.254.169.254', { exact: false }).first()).toBeVisible();
 });
 
+test('diger modlarin araclari', async ({ page }) => {
+  // Developer: lorem + renk + cron + taban + css
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  await expect(page.getByTestId('lorem-output')).not.toBeEmpty();
+  await page.getByLabel('HEX degeri').fill('#ff0000');
+  await expect(page.getByTestId('color-RGB')).toContainText('rgb(255, 0, 0)');
+  await page.getByLabel('Cron ifadesi').fill('* * * * *');
+  await expect(page.getByTestId('cron-result')).toContainText('Her dakika');
+  await page.getByLabel('Cevrilecek sayi').fill('255');
+  await expect(page.getByTestId('base-hex')).toContainText('hex ff');
+  await page.getByLabel('Piksel degeri').fill('32');
+  await expect(page.getByTestId('css-rem')).toContainText('rem 2');
+  // Privacy: breach + phishing
+  await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await page.getByLabel('Denetlenecek sifre').fill('password');
+  await page.getByRole('button', { name: 'Denetle' }).first().click();
+  await expect(page.getByTestId('breach-result')).toContainText(/sızıntıda|görülmedi/, { timeout: 20000 });
+  await page.getByLabel('Denetlenecek baglanti').fill('http://192.168.1.1/login?next=x');
+  await page.getByRole('button', { name: 'Denetle' }).nth(1).click();
+  await expect(page.getByTestId('phish-verdict')).toContainText(/Şüpheli|Riskli/);
+  // Standard: birim + not + pomodoro
+  await page.getByRole('tab', { name: 'Standart' }).click();
+  await expect(page.getByTestId('unit-result')).toContainText('1 m');
+  await page.getByLabel('Hizli not').fill('demo notu');
+  await page.reload();
+  await expect(page.getByLabel('Hizli not')).toHaveValue('demo notu');
+  await expect(page.getByTestId('pomo-clock')).toContainText('25:00');
+});
+
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
   await page.getByPlaceholder('Search the web privately').fill('zero browser test');
   await page.keyboard.press('Enter');
