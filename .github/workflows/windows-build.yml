@@ -126,9 +126,10 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           cd firefox-esr
-          $zips = Get-ChildItem -Recurse obj-zero/dist -Filter "firefox-*.zip"
+          $zips = Get-ChildItem -Recurse obj-zero/dist -Filter "*.zip"
           $zips | Select-Object Name, Length | Out-String | Write-Output
-          $zip = $zips | Where-Object { $_.Name -notmatch 'xpt|artifact' } | Select-Object -First 1
+          $zip = $zips | Where-Object { $_.Name -notmatch 'xpt|artifact' -and $_.Name -match '^(firefox|zero)-' } | Select-Object -First 1
+          if (-not $zip) { $zip = $zips | Where-Object { $_.Name -notmatch 'xpt|artifact' } | Select-Object -First 1 }
           if (-not $zip) { throw "paket zip bulunamadi" }
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
