@@ -1,32 +1,53 @@
 import { MODES } from '../modes';
 import type { ModeId } from '../types';
+import AgeTool from './tools/AgeTool';
 import Base64Tool from './tools/Base64Tool';
 import BaseConverter from './tools/BaseConverter';
+import BmiTool from './tools/BmiTool';
 import BreachCheck from './tools/BreachCheck';
+import CalcTool from './tools/CalcTool';
+import ChmodTool from './tools/ChmodTool';
 import ColorTool from './tools/ColorTool';
+import CountdownTool from './tools/CountdownTool';
 import CronTool from './tools/CronTool';
 import CssUnits from './tools/CssUnits';
 import CvssCalculator from './tools/CvssCalculator';
+import DateDiffTool from './tools/DateDiffTool';
+import DiffTool from './tools/DiffTool';
 import DorkGenerator from './tools/DorkGenerator';
+import EmailHeaders from './tools/EmailHeaders';
 import EncoderLab from './tools/EncoderLab';
 import EncryptTool from './tools/EncryptTool';
+import FileAnalyzer from './tools/FileAnalyzer';
+import GitignoreTool from './tools/GitignoreTool';
 import HashTool from './tools/HashTool';
 import JsonTool from './tools/JsonTool';
 import JwtTool from './tools/JwtTool';
+import KdvTool from './tools/KdvTool';
 import LeakPanel from './tools/LeakPanel';
 import LfiGenerator from './tools/LfiGenerator';
+import LoanTool from './tools/LoanTool';
 import LoremTool from './tools/LoremTool';
+import MarkdownTool from './tools/MarkdownTool';
 import PasswordGenerator from './tools/PasswordGenerator';
 import PayloadLibrary from './tools/PayloadLibrary';
+import PercentTool from './tools/PercentTool';
 import PhishingCheck from './tools/PhishingCheck';
 import Pomodoro from './tools/Pomodoro';
+import Privesc from './tools/Privesc';
 import QuickNote from './tools/QuickNote';
+import RandomPicker from './tools/RandomPicker';
+import Stopwatch from './tools/Stopwatch';
+import TextTools from './tools/TextTools';
+import TodoTool from './tools/TodoTool';
 import SqliHelper from './tools/SqliHelper';
 import RegexTool from './tools/RegexTool';
+import ReverseShell from './tools/ReverseShell';
 import SubnetTool from './tools/SubnetTool';
 import TimestampTool from './tools/TimestampTool';
 import UnitConverter from './tools/UnitConverter';
 import UrlCleaner from './tools/UrlCleaner';
+import UrlParserTool from './tools/UrlParserTool';
 import UuidTool from './tools/UuidTool';
 import XssGenerator from './tools/XssGenerator';
 
@@ -81,6 +102,18 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
         <UnitConverter />
         <QuickNote />
         <Pomodoro />
+        <CalcTool />
+        <TextTools />
+        <PercentTool />
+        <BmiTool />
+        <KdvTool />
+        <TodoTool />
+        <CountdownTool />
+        <RandomPicker />
+        <AgeTool />
+        <Stopwatch />
+        <LoanTool />
+        <DateDiffTool />
       </Shell>
     );
   }
@@ -99,6 +132,11 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
         <CronTool />
         <BaseConverter />
         <CssUnits />
+        <DiffTool />
+        <MarkdownTool />
+        <ChmodTool />
+        <GitignoreTool />
+        <UrlParserTool />
         <Links>
           <Mini label="about:debugging" onClick={() => go('about:debugging')} />
           <Mini label="about:config" onClick={() => go('about:config')} />
@@ -124,12 +162,10 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
         <HashTool />
         <SubnetTool />
         <CvssCalculator />
-        <Links>
-          <Mini label="about:protections" onClick={() => go('about:protections')} />
-          <Mini label="about:logins" onClick={() => go('about:logins')} />
-          <MiniExt label="HaveIBeenPwned ↗" url="https://haveibeenpwned.com" />
-          <MiniExt label="Observatory ↗" url="https://observatory.mozilla.org" />
-        </Links>
+        <ReverseShell />
+        <FileAnalyzer />
+        <EmailHeaders />
+        <Privesc />
         <Links>
           <Mini label="about:protections" onClick={() => go('about:protections')} />
           <Mini label="about:logins" onClick={() => go('about:logins')} />

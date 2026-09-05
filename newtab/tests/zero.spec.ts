@@ -73,7 +73,7 @@ test('modlar kisayol setini ve paneli degistirir + hatirlar', async ({ page }) =
   // Developer
   await page.getByRole('tab', { name: 'Developer' }).click();
   expect(await mode()).toBe('developer');
-  await expect(page.getByText('MDN', { exact: true })).toBeVisible();
+  await expect(page.getByText('Stack Overflow', { exact: true })).toBeVisible();
   await expect(page.getByText('JSON Formatlayıcı')).toBeVisible();
   await page.reload();
   expect(await mode()).toBe('developer');
@@ -198,6 +198,47 @@ test('diger modlarin araclari', async ({ page }) => {
   await page.reload();
   await expect(page.getByLabel('Hizli not')).toHaveValue('demo notu');
   await expect(page.getByTestId('pomo-clock')).toContainText('25:00');
+});
+
+test('dev 16 arac', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  await expect(page.getByTestId('diff-stat')).toContainText('+1');
+  await expect(page.getByTestId('md-preview').getByRole('heading', { name: 'ZERO' })).toBeVisible();
+  await expect(page.getByTestId('chmod-result')).toContainText('chmod 644');
+  await expect(page.getByTestId('gitignore-output')).toContainText('node_modules');
+  await expect(page.getByTestId('urlparse-result')).toContainText('ornek.com');
+});
+
+test('cyber 15 arac', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await expect(page.getByTestId('revshell-bash')).toContainText('10.10.10.10');
+  await page.getByLabel('Analiz edilecek dosya').setInputFiles({ name: 'a.txt', mimeType: 'text/plain', buffer: Buffer.from('hello') });
+  await expect(page.getByTestId('file-info')).toContainText('5 B');
+  await expect(page.getByText('fail', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('sudo -l', { exact: true })).toBeVisible();
+});
+
+test('standart 15 arac', async ({ page }) => {
+  await expect(page.getByLabel('Hesap ifadesi')).toBeVisible();
+  await page.getByLabel('Hesap ifadesi').fill('2+3*4');
+  await expect(page.getByTestId('calc-result')).toContainText('= 14');
+  await expect(page.getByTestId('text-stats')).toContainText('4 kelime');
+  await expect(page.getByTestId('percent-result')).toContainText('= 20');
+  await expect(page.getByTestId('bmi-result')).toContainText('25.0');
+  await expect(page.getByTestId('bmi-result')).toContainText('Kilolu');
+  await expect(page.getByTestId('kdv-result')).toContainText('120');
+  await page.getByLabel('Yeni yapilacak madde').fill('süt al');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('todo-count')).toContainText('1 açık');
+  await page.getByLabel('Hedef tarih').fill('2030-01-01T00:00');
+  await expect(page.getByTestId('countdown-cells')).toContainText(/\d{3,}/);
+  await page.getByRole('button', { name: 'Çek!' }).click();
+  await expect(page.getByTestId('pick-result')).toContainText(/Ali|Veli|Zeynep/);
+  await expect(page.getByTestId('age-result')).toContainText(/Yaş: \d+/);
+  await page.getByRole('button', { name: 'Başlat' }).nth(1).click();
+  await expect(page.getByTestId('stopwatch')).not.toHaveText('00:00.0', { timeout: 5000 });
+  await expect(page.getByTestId('loan-result')).toContainText('8.884');
+  await expect(page.getByTestId('datediff-result')).toContainText('10 gün');
 });
 
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
