@@ -35,5 +35,5 @@ cd "$ESR"
 test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: firefox.exe uretilmedi"; exit 1; }
 ./mach package
 echo "== system addon dogrulama (omni.ja) =="
-python3 -c "import zipfile; z=zipfile.ZipFile('obj-zero/dist/bin/browser/omni.ja'); ns=z.namelist(); hit=[n for n in ns if 'builtin-addons/zero-newtab/dist/index.html' in n]; assert hit, 'system addon omni.ja icinde yok'; print('system addon OK:', hit)"
+python3 -c "import glob,zipfile; cs=glob.glob('obj-zero/dist/**/omni.ja', recursive=True); print('omni:',cs); assert cs,'omni.ja bulunamadi'; hit=[(c,n) for c in cs for n in zipfile.ZipFile(c).namelist() if 'builtin-addons/zero-newtab/dist/index.html' in n]; assert hit,f'system addon pakette yok'; print('system addon OK:',hit[0])"
 echo "BUILD OK"
