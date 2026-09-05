@@ -43,21 +43,29 @@ jobs:
           hg clone https://hg.mozilla.org/releases/mozilla-esr140 firefox-esr
           if (-not (Test-Path firefox-esr/browser/app/profile/firefox.js)) { throw "clone eksik gorunuyor" }
 
-      - name: Newtab derle + XPI paketle
+      - name: Newtab derle + system addon iskeleti
         run: |
           $ErrorActionPreference = 'Stop'
           cd zero/newtab
           npm install --no-audit --no-fund
           npm run build
           if (-not (Test-Path dist/index.html)) { throw "newtab dist uretilmedi" }
-          cd ../extension
-          Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue
-          Copy-Item -Recurse ../newtab/dist dist
-          Remove-Item zero-newtab@example.com.xpi -ErrorAction SilentlyContinue
-          Compress-Archive -Path manifest.json,background.js,newtab-override.js,dist -DestinationPath "zero-newtab.zip"
-          Move-Item "zero-newtab.zip" "zero-newtab@example.com.xpi" -Force
-          if (-not (Test-Path "zero-newtab@example.com.xpi")) { throw "XPI olusmadi" }
           cd $env:GITHUB_WORKSPACE
+          # System addon: derleme icine gomulur (dagitim klasoru zamanlama sorunlarini bitirir)
+          $sa = 'firefox-esr/browser/extensions/zero-newtab/extension'
+          New-Item -ItemType Directory -Force $sa | Out-Null
+          Copy-Item zero/extension/manifest.json,zero/extension/background.js,zero/extension/newtab-override.js $sa -Force
+          Copy-Item -Recurse zero/newtab/dist "$sa/dist" -Force
+          Copy-Item zero/firefox-fork/system-addon/zero-newtab/moz.build,zero/firefox-fork/system-addon/zero-newtab/jar.mn firefox-esr/browser/extensions/zero-newtab/ -Force
+          $mb = 'firefox-esr/browser/extensions/moz.build'
+          $c = Get-Content $mb -Raw
+          if ($c -notmatch '"zero-newtab"') {
+            $c = $c -replace '"newtab",', ('"newtab",' + "`n" + '    "zero-newtab",')
+            Set-Content $mb $c -NoNewline
+          }
+          if (-not (Select-String -Path $mb -Pattern '"zero-newtab"' -Quiet)) { throw "DIRS yamasi tutmadi" }
+          if (-not (Test-Path "$sa/dist/index.html")) { throw "system addon dist eksik" }
+          Write-Output "system addon iskelet OK"
 
       - name: ZERO branding (PowerShell)
         run: |
@@ -126,9 +134,8 @@ jobs:
           $exe = Get-ChildItem -Recurse $tmp -Filter "firefox.exe" | Select-Object -First 1
           if (-not $exe) { Get-ChildItem $tmp; throw "pakette firefox.exe yok" }
           $fw = $exe.Directory
-          New-Item -ItemType Directory -Force "$($fw.FullName)/distribution/extensions" | Out-Null
-          Copy-Item "$env:GITHUB_WORKSPACE/zero/extension/zero-newtab@example.com.xpi" "$($fw.FullName)/distribution/extensions/" -Force
-          if (-not (Test-Path "$($fw.FullName)/distribution/extensions/zero-newtab@example.com.xpi")) { throw "XPI kopyalanamadi" }
+          # Politika (kanitli calisiyor)
+          New-Item -ItemType Directory -Force "$($fw.FullName)/distribution" | Out-Null
           Set-Content "$($fw.FullName)/distribution/policies.json" @'
           {
             "policies": {
@@ -140,6 +147,12 @@ jobs:
             }
           }
           '@
+          # Varsayilan profile siyah tema: her yeni ZERO profiliyle gelir
+          $profChrome = "$($fw.FullName)/browser/defaults/profile/chrome"
+          New-Item -ItemType Directory -Force $profChrome | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE/zero/chrome/userChrome.css","$env:GITHUB_WORKSPACE/zero/chrome/userContent.css" $profChrome -Force
+          if (-not (Test-Path "$profChrome/userChrome.css")) { throw "tema kopyalanamadi" }
+          Write-Output "tema + politika OK"
           Compress-Archive -Path "$($fw.FullName)" -DestinationPath "$env:RUNNER_TEMP/zero-windows.zip" -Force
           $size = (Get-Item "$env:RUNNER_TEMP/zero-windows.zip").Length
           Write-Output "zero-windows.zip: $([math]::Round($size/1MB)) MB"

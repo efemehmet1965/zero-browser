@@ -34,4 +34,6 @@ cd "$ESR"
 ./mach build
 test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: firefox.exe uretilmedi"; exit 1; }
 ./mach package
+echo "== system addon dogrulama (omni.ja) =="
+python3 -c "import zipfile; z=zipfile.ZipFile('obj-zero/dist/bin/browser/omni.ja'); ns=z.namelist(); hit=[n for n in ns if 'builtin-addons/zero-newtab/dist/index.html' in n]; assert hit, 'system addon omni.ja icinde yok'; print('system addon OK:', hit)"
 echo "BUILD OK"
