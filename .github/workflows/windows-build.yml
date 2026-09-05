@@ -159,7 +159,42 @@ jobs:
           New-Item -ItemType Directory -Force $profChrome | Out-Null
           Copy-Item "$env:GITHUB_WORKSPACE/zero/chrome/userChrome.css","$env:GITHUB_WORKSPACE/zero/chrome/userContent.css" $profChrome -Force
           if (-not (Test-Path "$profChrome/userChrome.css")) { throw "tema kopyalanamadi" }
-          Write-Output "tema + politika OK"
+          # Yedek katman: autoconfig ilk acilista temayi profile yazar (dis cerceve garantisi)
+          $themeDir = "$($fw.FullName)/browser/zero-theme"
+          New-Item -ItemType Directory -Force $themeDir | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE/zero/chrome/userChrome.css","$env:GITHUB_WORKSPACE/zero/chrome/userContent.css" $themeDir -Force
+          New-Item -ItemType Directory -Force "$($fw.FullName)/defaults/pref" | Out-Null
+          Set-Content "$($fw.FullName)/defaults/pref/autoconfig.js" @'
+          pref("general.config.filename", "mozilla.cfg");
+          pref("general.config.obscure_value", 0);
+          '@
+          Set-Content "$($fw.FullName)/mozilla.cfg" @'
+          // ZERO tema bootstrap: ilk acilista chrome dosyalarini profile kopyalar.
+          (function () {
+            try {
+              var Cc = Components.classes;
+              var Ci = Components.interfaces;
+              Components.utils.import("resource://gre/modules/Services.jsm");
+              var profChrome = Services.dirsvc.get("ProfD", Ci.nsIFile);
+              profChrome.append("chrome");
+              if (!profChrome.exists()) profChrome.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+              var need = [];
+              ["userChrome.css", "userContent.css"].forEach(function (n) {
+                var f = profChrome.clone(); f.append(n);
+                if (!f.exists()) need.push(n);
+              });
+              if (!need.length) return;
+              var theme = Services.dirsvc.get("GreD", Ci.nsIFile);
+              theme.append("browser"); theme.append("zero-theme");
+              need.forEach(function (n) {
+                var src = theme.clone(); src.append(n);
+                if (src.exists()) src.copyTo(profChrome, "");
+              });
+            } catch (e) {}
+          })();
+          '@
+          if (-not (Test-Path "$($fw.FullName)/mozilla.cfg")) { throw "autoconfig yazilamadi" }
+          Write-Output "tema + politika + autoconfig OK"
           Compress-Archive -Path "$($fw.FullName)" -DestinationPath "$env:RUNNER_TEMP/zero-windows.zip" -Force
           $size = (Get-Item "$env:RUNNER_TEMP/zero-windows.zip").Length
           Write-Output "zero-windows.zip: $([math]::Round($size/1MB)) MB"
