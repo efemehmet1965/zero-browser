@@ -24,6 +24,7 @@ pref("browser.pocket.enabled", false);
 pref("datareporting.healthreport.uploadEnabled", false);
 pref("app.shield.optoutstudies.enabled", false);
 pref("xpinstall.signatures.required", false);
+pref("ui.systemUsesDarkTheme", 1);
 EOF
 fi
 

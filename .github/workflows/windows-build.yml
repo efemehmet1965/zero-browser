@@ -84,6 +84,11 @@ jobs:
           Copy-Item "$src/*" $dst -Recurse -Force
           # Repo markasi uste biner: gosterim adi ZERO
           Copy-Item "$env:GITHUB_WORKSPACE/zero/firefox-fork/branding/zero/configure.sh" "$dst/configure.sh" -Force
+          # ZERO ikon seti (tilki gider, halkali Z gelir)
+          pip install pillow --quiet
+          python "$env:GITHUB_WORKSPACE/zero/firefox-fork/scripts/make-icons.py" "$dst"
+          if (-not (Test-Path "$dst/firefox.ico")) { throw "ikon uretilemedi" }
+          Write-Output "branding + ikon OK"
           Get-ChildItem -Recurse -Path $dst -Include 'brand.*','*.dtd','*.ftl' | ForEach-Object {
             (Get-Content $_.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $_.FullName -NoNewline:$false
           }
