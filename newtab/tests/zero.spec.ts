@@ -74,17 +74,40 @@ test('modlar kisayol setini ve paneli degistirir + hatirlar', async ({ page }) =
   await page.getByRole('tab', { name: 'Developer' }).click();
   expect(await mode()).toBe('developer');
   await expect(page.getByText('MDN', { exact: true })).toBeVisible();
-  await expect(page.getByText('Eklenti hata ayiklama')).toBeVisible();
+  await expect(page.getByText('JSON Formatlayıcı')).toBeVisible();
   await page.reload();
   expect(await mode()).toBe('developer');
   // Cybersecurity
   await page.getByRole('tab', { name: 'Cybersecurity' }).click();
   await expect(page.getByText('VirusTotal', { exact: true })).toBeVisible();
-  await expect(page.getByText('HaveIBeenPwned', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('Dork Generator')).toBeVisible();
   // Gizlilik
   await page.getByRole('tab', { name: 'Gizlilik' }).click();
   await expect(page.getByText('Proton Mail', { exact: true })).toBeVisible();
-  await expect(page.getByText('Tor Project', { exact: true }).first()).toBeVisible();
+  await expect(page.getByText('URL Temizleyici')).toBeVisible();
+});
+
+test('mod araclari gercekten calisir', async ({ page }) => {
+  // Dork Generator
+  await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await page.getByPlaceholder('ornek.com veya anahtar kelime').fill('example.com');
+  await expect(page.getByText('site:example.com filetype:pdf', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /Üret/ }).click();
+  const pwd = await page.getByTestId('password-output').textContent();
+  expect(pwd && pwd.length >= 20).toBeTruthy();
+  // JSON
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  await page.getByLabel('JSON girisi').fill('{"a":1}');
+  await page.getByRole('button', { name: 'Formatla' }).click();
+  await expect(page.getByLabel('JSON girisi')).toHaveValue(/"a": 1/);
+  await page.getByLabel('JSON girisi').fill('{bozuk');
+  await page.getByRole('button', { name: 'Formatla' }).click();
+  await expect(page.getByText(/Hata:/)).toBeVisible();
+  // URL temizleyici
+  await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await page.getByPlaceholder('https://ornek.com/?utm_source=...').fill('https://x.com/post?utm_source=t&fbclid=ABC&id=5');
+  await page.getByRole('button', { name: 'Temizle' }).click();
+  await expect(page.getByText(/Sökülen: utm_source, fbclid/)).toBeVisible();
 });
 
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
