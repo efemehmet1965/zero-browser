@@ -160,3 +160,16 @@ test('Hover büyütme kapatılıp hatırlanır', async ({ page }) => {
   await page.getByText('⚙ ZERO ayarları').click();
   await expect(page.getByRole('button', { name: 'Hover büyütme' })).toContainText('Kapalı');
 });
+
+test('Router kuralı workspace eşleştirir + kalıcıdır', async ({ page }) => {
+  await page.getByLabel('Kural domain').fill('github.com');
+  await page.getByRole('button', { name: 'Kural ekle' }).click();
+  await page.getByLabel("Test URL'si").fill('https://gist.github.com/x');
+  await expect(page.getByTestId('router-match')).toContainText('Design System');
+  await page.getByLabel("Test URL'si").fill('https://ornek.com/a');
+  await expect(page.getByTestId('router-match')).toContainText('eşleşme yok');
+  await page.reload();
+  await expect(page.getByText('Just the web.', { exact: true })).toBeVisible();
+  await page.getByLabel("Test URL'si").fill('https://github.com/y');
+  await expect(page.getByTestId('router-match')).toContainText('Design System');
+});

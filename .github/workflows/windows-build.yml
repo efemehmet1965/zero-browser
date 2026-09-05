@@ -27,6 +27,8 @@ jobs:
             'zero/newtab/src/settings/useZeroSettings.ts',
             'zero/newtab/src/lib/db.ts',
             'zero/newtab/src/components/VerticalTabs.tsx',
+            'zero/newtab/src/components/RouterPanel.tsx',
+            'zero/newtab/src/router/rules.ts',
             'zero/newtab/src/components/tools/send.ts',
             'zero/newtab/src/components/tools/tezgahOps.ts',
             'zero/newtab/src/components/tools/Tezgah.tsx',

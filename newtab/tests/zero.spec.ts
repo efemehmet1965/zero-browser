@@ -29,7 +29,8 @@ test('kenar cubugu + sekmeler + tagline gorunur', async ({ page }) => {
   for (const label of ['Bookmarks', 'History', 'Downloads', 'Workspaces', 'Settings']) {
     await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
   }
-  await expect(page.getByText('New Tab')).toBeVisible();
+  await expect(page.getByLabel('Dikey sekmeler')).toBeVisible();
+  await expect(page.getByLabel('Dikey sekmeler').getByRole('tab').first()).toBeVisible();
   await expect(page.getByText('ZERO.', { exact: true })).toBeVisible();
   await expect(page.getByText('RECENT WORKSPACES')).toBeVisible();
 });

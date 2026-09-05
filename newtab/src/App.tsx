@@ -2,6 +2,7 @@ import SearchBar from './components/SearchBar';
 import SettingsPanel from './components/SettingsPanel';
 import Shortcuts from './components/Shortcuts';
 import RecentWorkspaces from './components/RecentWorkspaces';
+import RouterPanel from './components/RouterPanel';
 import ModeDashboard from './components/ModeDashboard';
 import ModeSwitcher from './components/ModeSwitcher';
 import Sidebar from './components/Sidebar';
@@ -94,6 +95,8 @@ export default function App() {
               activeId={state.activeWorkspaceId}
               onSelect={setActiveWorkspace}
             />
+
+            <RouterPanel workspaces={state.workspaces} />
           </div>
         </main>
         {panelRight && (
