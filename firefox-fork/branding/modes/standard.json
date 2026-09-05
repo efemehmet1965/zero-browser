@@ -1,0 +1,13 @@
+{
+  "_comment": "ZERO mod: standard — dengeli gunluk kullanim. Derlemede firefox.js sonuna eklenir veya policies ile dagitilir.",
+  "prefs": {
+    "browser.startup.homepage": "about:newtab",
+    "browser.search.defaultenginename": "DuckDuckGo",
+    "privacy.trackingprotection.enabled": true,
+    "browser.contentblocking.category": "standard",
+    "toolkit.legacyUserProfileCustomizations.stylesheets": true,
+    "browser.pocket.enabled": false,
+    "datareporting.healthreport.uploadEnabled": false,
+    "app.shield.optoutstudies.enabled": false
+  }
+}

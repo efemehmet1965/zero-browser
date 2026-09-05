@@ -1,0 +1,20 @@
+{
+  "_comment": "ZERO mod: privacy — maksimum gizlilik. NOT: resistFingerprinting bazi siteleri bozabilir, bilincli secim.",
+  "prefs": {
+    "browser.startup.homepage": "about:newtab",
+    "browser.search.defaultenginename": "DuckDuckGo",
+    "browser.contentblocking.category": "strict",
+    "privacy.trackingprotection.enabled": true,
+    "privacy.trackingprotection.socialtracking.enabled": true,
+    "privacy.fingerprintingProtection.enabled": true,
+    "privacy.query_stripping.enabled": true,
+    "privacy.query_stripping.enabled.pbmode": true,
+    "network.cookie.cookieBehavior": 5,
+    "dom.security.https_only_mode": true,
+    "toolkit.legacyUserProfileCustomizations.stylesheets": true,
+    "datareporting.healthreport.uploadEnabled": false,
+    "datareporting.policy.dataSubmissionEnabled": false,
+    "app.shield.optoutstudies.enabled": false,
+    "browser.discovery.enabled": false
+  }
+}

@@ -47,7 +47,7 @@ test('kisayollar listelenir, ekleme kalici olur, silme calisir', async ({ page }
   // Yeniden yukle -> kalici mi (localStorage)
   await page.reload();
   await expect(page.getByText('TestBox', { exact: true })).toBeVisible();
-  const stored = await page.evaluate(() => localStorage.getItem('zero.state.v1') ?? '');
+  const stored = await page.evaluate(() => localStorage.getItem('zero.state.v2') ?? '');
   expect(stored).toContain('TestBox');
   // Sil (custom tile uzerindeki remove dugmesi)
   await page.getByText('TestBox', { exact: true }).hover();
@@ -56,7 +56,7 @@ test('kisayollar listelenir, ekleme kalici olur, silme calisir', async ({ page }
 });
 
 test('workspace hapleri aktif degistirir + hatirlar', async ({ page }) => {
-  const state = () => page.evaluate(() => JSON.parse(localStorage.getItem('zero.state.v1') ?? '{}').activeWorkspaceId);
+  const state = () => page.evaluate(() => JSON.parse(localStorage.getItem('zero.state.v2') ?? '{}').activeWorkspaceId);
   expect(await state()).toBe('ws-design');
   await page.getByRole('button', { name: /Marketing Plan/ }).click();
   expect(await state()).toBe('ws-marketing');
@@ -64,6 +64,27 @@ test('workspace hapleri aktif degistirir + hatirlar', async ({ page }) => {
   expect(await state()).toBe('ws-marketing');
   await page.getByRole('button', { name: /Product Launch/ }).click();
   expect(await state()).toBe('ws-launch');
+});
+
+test('modlar kisayol setini ve paneli degistirir + hatirlar', async ({ page }) => {
+  const mode = () => page.evaluate(() => JSON.parse(localStorage.getItem('zero.state.v2') ?? '{}').activeModeId);
+  expect(await mode()).toBe('standard');
+  await expect(page.getByText('ZERO Blog', { exact: true })).toBeVisible();
+  // Developer
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  expect(await mode()).toBe('developer');
+  await expect(page.getByText('MDN', { exact: true })).toBeVisible();
+  await expect(page.getByText('Eklenti hata ayiklama')).toBeVisible();
+  await page.reload();
+  expect(await mode()).toBe('developer');
+  // Cybersecurity
+  await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await expect(page.getByText('VirusTotal', { exact: true })).toBeVisible();
+  await expect(page.getByText('HaveIBeenPwned', { exact: true }).first()).toBeVisible();
+  // Gizlilik
+  await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await expect(page.getByText('Proton Mail', { exact: true })).toBeVisible();
+  await expect(page.getByText('Tor Project', { exact: true }).first()).toBeVisible();
 });
 
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {

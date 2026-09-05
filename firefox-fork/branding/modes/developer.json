@@ -1,0 +1,13 @@
+{
+  "_comment": "ZERO mod: developer — gelistirici araclari acik, uzaktan hata ayiklamaya hazir.",
+  "prefs": {
+    "browser.startup.homepage": "about:newtab",
+    "browser.search.defaultenginename": "DuckDuckGo",
+    "devtools.chrome.enabled": true,
+    "devtools.debugger.remote-enabled": true,
+    "devtools.cache.disabled": true,
+    "javascript.options.source_pragmas": true,
+    "toolkit.legacyUserProfileCustomizations.stylesheets": true,
+    "privacy.trackingprotection.enabled": true
+  }
+}

@@ -1,18 +1,23 @@
 import SearchBar from './components/SearchBar';
 import Shortcuts from './components/Shortcuts';
 import RecentWorkspaces from './components/RecentWorkspaces';
+import ModeDashboard from './components/ModeDashboard';
+import ModeSwitcher from './components/ModeSwitcher';
 import Sidebar from './components/Sidebar';
 import Toolbar from './components/Toolbar';
 import WindowBar from './components/WindowBar';
 import ZeroLogo from './components/ZeroLogo';
+import { MODES } from './modes';
 import { useZeroState } from './store';
 
 // ZERO newtab — full-window pixel clone of the reference screenshot.
 // Layout: WindowBar / Toolbar / [Sidebar 180px | centered content max-w 800px].
-// The outer WindowBar+Toolbar mirror what userChrome.css paints on native
-// Firefox chrome, so the demo looks seamless either way.
+// Mod satiri (Standart/Developer/Cybersecurity/Gizlilik) kisayol setini ve
+// paneli degistirir; secim localStorage'da saklanir.
 export default function App() {
-  const { state, setActiveWorkspace, addShortcut, removeShortcut } = useZeroState();
+  const { state, setActiveWorkspace, setMode, addShortcut, removeShortcut } = useZeroState();
+  const mode = MODES[state.activeModeId] ?? MODES.standard;
+  const shortcuts = [...mode.builtins, ...state.customs];
 
   return (
     <div className="flex h-full flex-col bg-black text-white">
@@ -28,13 +33,17 @@ export default function App() {
               <span className="text-[#888]">Just the web.</span>
             </p>
 
+            <ModeSwitcher active={mode.id} onSelect={setMode} />
+
             <div className="mt-8 w-full max-w-[640px]">
               <SearchBar />
             </div>
 
             <div className="mt-8">
-              <Shortcuts shortcuts={state.shortcuts} onAdd={addShortcut} onRemove={removeShortcut} />
+              <Shortcuts shortcuts={shortcuts} onAdd={addShortcut} onRemove={removeShortcut} />
             </div>
+
+            <ModeDashboard mode={mode.id} />
 
             <RecentWorkspaces
               workspaces={state.workspaces}

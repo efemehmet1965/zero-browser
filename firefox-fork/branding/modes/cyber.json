@@ -1,0 +1,17 @@
+{
+  "_comment": "ZERO mod: cybersecurity — HTTPS-Only + guclu izleyici korumasi + sifre yoneticisi acik.",
+  "prefs": {
+    "browser.startup.homepage": "about:newtab",
+    "browser.search.defaultenginename": "DuckDuckGo",
+    "dom.security.https_only_mode": true,
+    "privacy.trackingprotection.enabled": true,
+    "privacy.trackingprotection.cryptomining.enabled": true,
+    "privacy.trackingprotection.fingerprinting.enabled": true,
+    "browser.contentblocking.category": "strict",
+    "signon.rememberSignons": true,
+    "signon.generation.enabled": true,
+    "toolkit.legacyUserProfileCustomizations.stylesheets": true,
+    "datareporting.healthreport.uploadEnabled": false,
+    "app.shield.optoutstudies.enabled": false
+  }
+}

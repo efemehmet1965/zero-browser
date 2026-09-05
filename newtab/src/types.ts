@@ -27,8 +27,23 @@ export interface Shortcut {
   kind: 'builtin' | 'custom';
 }
 
+export type ModeId = 'standard' | 'developer' | 'cyber' | 'privacy';
+
+export interface ModeDef {
+  id: ModeId;
+  name: string;
+  tagline: string;
+  /** accent dot color */
+  dot: string;
+  builtins: Shortcut[];
+}
+
 export interface ZeroState {
   workspaces: Workspace[];
-  shortcuts: Shortcut[];
+  /** v2: yerlesik kisayollar modlardan gelir; customs tum modlarda gorunur */
+  customs: Shortcut[];
   activeWorkspaceId: string;
+  activeModeId: ModeId;
+  /** v1 geriye uyumluluk (okunur, yazilmaz) */
+  shortcuts?: Shortcut[];
 }
