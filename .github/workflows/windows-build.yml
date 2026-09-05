@@ -49,8 +49,8 @@ jobs:
           }
           $uc = Get-Content "$env:GITHUB_WORKSPACE/zero/chrome/userChrome.css" -Raw
           if ($uc -notmatch 'zero-newtab') { throw 'userChrome zero-newtab kurali yok' }
-          $mbext = Get-Content "$env:GITHUB_WORKSPACE/zero/firefox-fork/system-addon/zero-newtab/moz.build" -Raw
-          if ($mbext -notmatch 'zero-newtab') { throw 'system-addon moz.build bozuk' }
+          $jar = Get-Content "$env:GITHUB_WORKSPACE/zero/firefox-fork/system-addon/zero-newtab/jar.mn" -Raw
+          if ($jar -notmatch 'builtin-addons/zero-newtab') { throw 'system-addon jar.mn bozuk' }
           Write-Output 'on-dogrulama OK'
 
       - name: Arac kontrol (hg, node)
