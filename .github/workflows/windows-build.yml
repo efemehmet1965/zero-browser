@@ -66,6 +66,12 @@ jobs:
           if (-not (Select-String -Path $mb -Pattern '"zero-newtab"' -Quiet)) { throw "DIRS yamasi tutmadi" }
           if (-not (Test-Path "$sa/dist/index.html")) { throw "system addon dist eksik" }
           Write-Output "system addon iskelet OK"
+          # ZERO platform modulu (derlemeye gomulu JS servisi)
+          New-Item -ItemType Directory -Force firefox-esr/browser/zero | Out-Null
+          Copy-Item zero/firefox-fork/src/browser/zero/ZeroMode.sys.mjs,zero/firefox-fork/src/browser/zero/moz.build firefox-esr/browser/zero/ -Force
+          $bm = 'firefox-esr/browser/moz.build'
+          if ((Get-Content $bm -Raw) -notmatch 'DIRS \+= \["zero"\]') { Add-Content $bm 'DIRS += ["zero"]' }
+          if (-not (Test-Path firefox-esr/browser/zero/ZeroMode.sys.mjs)) { throw "platform modulu kopyalanamadi" }
 
       - name: ZERO branding (PowerShell)
         run: |
