@@ -1,18 +1,24 @@
 import { MODES } from '../modes';
 import type { ModeId } from '../types';
 import Base64Tool from './tools/Base64Tool';
+import CvssCalculator from './tools/CvssCalculator';
 import DorkGenerator from './tools/DorkGenerator';
+import EncoderLab from './tools/EncoderLab';
 import EncryptTool from './tools/EncryptTool';
 import HashTool from './tools/HashTool';
 import JsonTool from './tools/JsonTool';
 import JwtTool from './tools/JwtTool';
 import LeakPanel from './tools/LeakPanel';
+import LfiGenerator from './tools/LfiGenerator';
 import PasswordGenerator from './tools/PasswordGenerator';
+import PayloadLibrary from './tools/PayloadLibrary';
+import SqliHelper from './tools/SqliHelper';
 import RegexTool from './tools/RegexTool';
 import SubnetTool from './tools/SubnetTool';
 import TimestampTool from './tools/TimestampTool';
 import UrlCleaner from './tools/UrlCleaner';
 import UuidTool from './tools/UuidTool';
+import XssGenerator from './tools/XssGenerator';
 
 // Mod panosu: her modda GERCEK CALISAN araclar (tamami istemcide, ag yok).
 // Developer: JSON + Base64. Cyber: Dork Generator + sifre. Privacy: URL temizleyici.
@@ -84,9 +90,22 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
     return (
       <Shell blurb={blurb}>
         <DorkGenerator />
+        <XssGenerator />
+        <SqliHelper />
+        <EncoderLab />
+        <LfiGenerator />
+        <PayloadLibrary />
+        <JwtTool />
         <PasswordGenerator />
         <HashTool />
         <SubnetTool />
+        <CvssCalculator />
+        <Links>
+          <Mini label="about:protections" onClick={() => go('about:protections')} />
+          <Mini label="about:logins" onClick={() => go('about:logins')} />
+          <MiniExt label="HaveIBeenPwned ↗" url="https://haveibeenpwned.com" />
+          <MiniExt label="Observatory ↗" url="https://observatory.mozilla.org" />
+        </Links>
         <Links>
           <Mini label="about:protections" onClick={() => go('about:protections')} />
           <Mini label="about:logins" onClick={() => go('about:logins')} />

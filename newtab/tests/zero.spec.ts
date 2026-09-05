@@ -149,6 +149,28 @@ test('tum araclar derinden dogrulanir', async ({ page }) => {
   await expect(page.getByText('Tarayıcın Ne Sızdırıyor?')).toBeVisible();
 });
 
+test('siber cephanelik: XSS/SQLi/Encoder/LFI/CVSS/kutuphane', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  // JWT cyber'da da var
+  await expect(page.getByText('"sub": "ZERO"', { exact: false }).first()).toBeVisible();
+  // XSS: govde baglami klasik payloadu uretir
+  await expect(page.getByText('<script>alert(1)</script>', { exact: true }).first()).toBeVisible();
+  // SQLi: 3 sutun union
+  await page.getByLabel('Sutun sayisi').fill('3');
+  await expect(page.getByText(`' UNION SELECT 1,2,3-- -`, { exact: false })).toBeVisible();
+  // Encoder: script URL-kodlanir
+  await expect(page.getByTestId('enc-url')).toContainText('%3Cscript%3E');
+  // LFI: derinlik 4 etc/passwd
+  await expect(page.getByText('../../../../etc/passwd', { exact: true }).first()).toBeVisible();
+  // CVSS: bilinen vektor 7.5 High
+  await expect(page.getByTestId('cvss-score')).toContainText('7.5');
+  await expect(page.getByTestId('cvss-score')).toContainText('Yüksek');
+  // Kutuphane: SSTI sondasi
+  await expect(page.getByText('{{7*7}}', { exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'XXE', exact: true }).click();
+  await expect(page.getByText('169.254.169.254', { exact: false }).first()).toBeVisible();
+});
+
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
   await page.getByPlaceholder('Search the web privately').fill('zero browser test');
   await page.keyboard.press('Enter');
