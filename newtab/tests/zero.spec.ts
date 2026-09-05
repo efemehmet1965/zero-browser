@@ -110,6 +110,45 @@ test('mod araclari gercekten calisir', async ({ page }) => {
   await expect(page.getByText(/Sökülen: utm_source, fbclid/)).toBeVisible();
 });
 
+test('tum araclar derinden dogrulanir', async ({ page }) => {
+  // JWT: ornek token cozumu + bozuk giris hatasi
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  await expect(page.getByText('"sub": "ZERO"', { exact: false }).first()).toBeVisible();
+  await page.getByLabel('JWT girisi').fill('bozuk-token');
+  await expect(page.getByText(/Hata:/).first()).toBeVisible();
+  // Timestamp: 0 -> 1970
+  await page.getByLabel('Zaman damgasi sayisi').fill('0');
+  await expect(page.getByTestId('ts-result')).toContainText('1970');
+  // UUID: uretim listeyi buyutur
+  const uuids = page.getByTestId('uuid-list').locator('button');
+  await expect(uuids).toHaveCount(1);
+  await page.getByRole('button', { name: 'Üret' }).click();
+  await expect(uuids).toHaveCount(2);
+  // Regex: varsayilan desen 2 eslesme
+  await expect(page.getByTestId('regex-result')).toContainText('2 eşleşme');
+  // Hash: abc'nin SHA-256'si unlu vektor
+  await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await page.getByLabel('Hashlenecek metin').fill('abc');
+  await page.getByRole('button', { name: 'Hashle' }).click();
+  await expect(page.getByTestId('hash-output')).toContainText('ba7816bf8f01cfea');
+  // Subnet: /24 dogrulari
+  await expect(page.getByTestId('subnet-broadcast')).toHaveText('192.168.1.255');
+  await expect(page.getByTestId('subnet-host')).toHaveText('254');
+  // Sifreleme turu: kilitle -> coz
+  await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await page.getByLabel('Sifreleme parolasi').fill('test1234');
+  await page.getByLabel('Acik metin').fill('gizli not');
+  await page.getByRole('button', { name: /Şifrele/ }).click();
+  await expect(page.getByLabel('Sifreli metin')).not.toHaveValue('', { timeout: 15000 });
+  const cipher = await page.getByLabel('Sifreli metin').inputValue();
+  expect(cipher.length).toBeGreaterThan(20);
+  await page.getByLabel('Acik metin').fill('');
+  await page.getByRole('button', { name: /Çöz/ }).click();
+  await expect(page.getByLabel('Acik metin')).toHaveValue('gizli not');
+  // Iz paneli gercek deger gosterir
+  await expect(page.getByText('Tarayıcın Ne Sızdırıyor?')).toBeVisible();
+});
+
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
   await page.getByPlaceholder('Search the web privately').fill('zero browser test');
   await page.keyboard.press('Enter');

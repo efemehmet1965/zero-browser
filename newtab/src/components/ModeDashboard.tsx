@@ -2,9 +2,17 @@ import { MODES } from '../modes';
 import type { ModeId } from '../types';
 import Base64Tool from './tools/Base64Tool';
 import DorkGenerator from './tools/DorkGenerator';
+import EncryptTool from './tools/EncryptTool';
+import HashTool from './tools/HashTool';
 import JsonTool from './tools/JsonTool';
+import JwtTool from './tools/JwtTool';
+import LeakPanel from './tools/LeakPanel';
 import PasswordGenerator from './tools/PasswordGenerator';
+import RegexTool from './tools/RegexTool';
+import SubnetTool from './tools/SubnetTool';
+import TimestampTool from './tools/TimestampTool';
 import UrlCleaner from './tools/UrlCleaner';
+import UuidTool from './tools/UuidTool';
 
 // Mod panosu: her modda GERCEK CALISAN araclar (tamami istemcide, ag yok).
 // Developer: JSON + Base64. Cyber: Dork Generator + sifre. Privacy: URL temizleyici.
@@ -57,6 +65,10 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
       <Shell blurb={blurb}>
         <JsonTool />
         <Base64Tool />
+        <JwtTool />
+        <TimestampTool />
+        <UuidTool />
+        <RegexTool />
         <Links>
           <Mini label="about:debugging" onClick={() => go('about:debugging')} />
           <Mini label="about:config" onClick={() => go('about:config')} />
@@ -73,6 +85,8 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
       <Shell blurb={blurb}>
         <DorkGenerator />
         <PasswordGenerator />
+        <HashTool />
+        <SubnetTool />
         <Links>
           <Mini label="about:protections" onClick={() => go('about:protections')} />
           <Mini label="about:logins" onClick={() => go('about:logins')} />
@@ -86,6 +100,8 @@ export default function ModeDashboard({ mode }: { mode: ModeId }) {
   return (
     <Shell blurb={blurb}>
       <UrlCleaner />
+      <EncryptTool />
+      <LeakPanel />
       <Links>
         <Mini label="about:protections" onClick={() => go('about:protections')} />
         <Mini label="about:preferences#privacy" onClick={() => go('about:preferences#privacy')} />
