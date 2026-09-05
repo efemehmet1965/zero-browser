@@ -1,4 +1,5 @@
 import SearchBar from './components/SearchBar';
+import SettingsPanel from './components/SettingsPanel';
 import Shortcuts from './components/Shortcuts';
 import RecentWorkspaces from './components/RecentWorkspaces';
 import ModeDashboard from './components/ModeDashboard';
@@ -27,7 +28,6 @@ const DEMO_TABS: VTab[] = [
 export default function App() {
   const { state, setActiveWorkspace, setMode, addShortcut, removeShortcut } = useZeroState();
   const { settings, setMode: setSettingsMode, setTabs } = useZeroSettings();
-  void setTabs;
   const mode = MODES[state.activeModeId] ?? MODES.standard;
   const shortcuts = [...mode.builtins, ...state.customs];
   const [closed, setClosed] = useState<string[]>([]);
@@ -77,6 +77,7 @@ export default function App() {
             </p>
 
             <ModeSwitcher active={mode.id} onSelect={handleMode} />
+            <SettingsPanel settings={settings} onTabs={setTabs} />
 
             <div className="mt-8 w-full max-w-[640px]">
               <SearchBar />

@@ -129,3 +129,34 @@ test('Gün Planı maddeleri canlı sayar', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('todo-count')).toContainText('2 açık');
 });
+
+test('Sekme şeridi sağa alınır + kalıcıdır', async ({ page }) => {
+  await page.getByText('⚙ ZERO ayarları').click();
+  await page.getByRole('button', { name: 'Sağ', exact: true }).click();
+  const tabsBox = await page.getByLabel('Dikey sekmeler').boundingBox();
+  const mainBox = await page.getByRole('main').boundingBox();
+  expect(tabsBox && mainBox && tabsBox.x > mainBox.x + mainBox.width / 2).toBeTruthy();
+  await page.reload();
+  await expect(page.getByText('Just the web.', { exact: true })).toBeVisible();
+  await expect.poll(async () => {
+    const t = await page.getByLabel('Dikey sekmeler').boundingBox();
+    const m = await page.getByRole('main').boundingBox();
+    return !!(t && m && t.x > m.x + m.width / 2);
+  }).toBe(true);
+});
+
+test('Geniş şeritte sekme başlıkları görünür', async ({ page }) => {
+  await page.getByText('⚙ ZERO ayarları').click();
+  await page.getByRole('button', { name: 'Geniş', exact: true }).click();
+  await expect(page.getByLabel('Dikey sekmeler').getByText('New Tab')).toBeVisible();
+});
+
+test('Hover büyütme kapatılıp hatırlanır', async ({ page }) => {
+  await page.getByText('⚙ ZERO ayarları').click();
+  await page.getByRole('button', { name: 'Hover büyütme' }).click();
+  await expect(page.getByRole('button', { name: 'Hover büyütme' })).toContainText('Kapalı');
+  await page.reload();
+  await expect(page.getByText('Just the web.', { exact: true })).toBeVisible();
+  await page.getByText('⚙ ZERO ayarları').click();
+  await expect(page.getByRole('button', { name: 'Hover büyütme' })).toContainText('Kapalı');
+});
