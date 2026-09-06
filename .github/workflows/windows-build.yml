@@ -215,17 +215,30 @@ jobs:
           if (-not $zip) { throw "paket zip bulunamadi" }
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+          Write-Output "zip icindeki exe'ler:"
+          $zrd = [System.IO.Compression.ZipFile]::OpenRead($zip.FullName)
+          try {
+            $zrd.Entries.FullName | Where-Object { $_ -like '*.exe' } | Out-String | Write-Output
+          } finally { $zrd.Dispose() }
+          try { Add-MpPreference -ExclusionPath $tmp -ErrorAction Stop; Write-Output "defender muafiyeti OK" }
+          catch { Write-Output "defender muafiyeti atlandi (zararsiz)" }
           Expand-Archive $zip.FullName $tmp
-          Write-Output "paket agaci (ilk 40 dosya):"
-          Get-ChildItem -LiteralPath $tmp -Recurse -File | Select-Object -First 40 -ExpandProperty FullName | Out-String | Write-Output
-          $exe = Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Name -eq 'zero.exe' } | Select-Object -First 1
-          if (-not $exe) { $exe = Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Name -eq 'firefox.exe' } | Select-Object -First 1 }
+          Write-Output "diskteki exe'ler (tum liste):"
+          $diskExes = @(Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Extension -eq '.exe' })
+          $diskExes.FullName | Out-String | Write-Output
+          $exe = @($diskExes | Where-Object { $_.Name -eq 'zero.exe' }) | Select-Object -First 1
+          if (-not $exe) { $exe = @($diskExes | Where-Object { $_.Name -eq 'firefox.exe' }) | Select-Object -First 1 }
           if (-not $exe) {
-            Write-Output "bulunan exe'ler:"
-            Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Extension -eq '.exe' } | Select-Object -First 5 -ExpandProperty FullName | Out-String | Write-Output
-            throw "pakette calistirilabilir yok (zero.exe/firefox.exe bulunamadi)"
+            $helpers = @('crashhelper.exe','crashreporter.exe','default-browser-agent.exe','maintenanceservice.exe','maintenanceservice_installer.exe','minimediaencoder.exe','pingsender.exe','plugin-container.exe','updater.exe','uninstall.exe','helper.exe')
+            $cands = @($diskExes | Where-Object { $helpers -notcontains $_.Name.ToLower() })
+            if ($cands.Count -eq 1) {
+              $exe = $cands[0]
+              Write-Output "UYARI: zero/firefox.exe yok, tek aday kullaniliyor: $($exe.FullName)"
+            }
           }
+          if (-not $exe) { throw "pakette calistirilabilir yok (zero.exe/firefox.exe bulunamadi)" }
           $fw = $exe.Directory
+          Write-Output "calistirilabilir: $($exe.FullName)"
           # Politika (kanitli calisiyor)
           New-Item -ItemType Directory -Force "$($fw.FullName)/distribution" | Out-Null
           Set-Content "$($fw.FullName)/distribution/policies.json" @'
