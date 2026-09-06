@@ -216,6 +216,7 @@ jobs:
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
           Write-Output "zip icindeki exe'ler:"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
           $zrd = [System.IO.Compression.ZipFile]::OpenRead($zip.FullName)
           try {
             $zrd.Entries.FullName | Where-Object { $_ -like '*.exe' } | Out-String | Write-Output
