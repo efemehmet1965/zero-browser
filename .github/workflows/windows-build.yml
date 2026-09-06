@@ -216,9 +216,15 @@ jobs:
           $tmp = "$env:RUNNER_TEMP/zero-pkg"
           Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
           Expand-Archive $zip.FullName $tmp
-          $exe = Get-ChildItem -Recurse $tmp -Filter "zero.exe" | Select-Object -First 1
-          if (-not $exe) { $exe = Get-ChildItem -Recurse $tmp -Filter "firefox.exe" | Select-Object -First 1 }
-          if (-not $exe) { Get-ChildItem $tmp; throw "pakette calistirilabilir yok" }
+          Write-Output "paket agaci (ilk 40 dosya):"
+          Get-ChildItem -LiteralPath $tmp -Recurse -File | Select-Object -First 40 -ExpandProperty FullName | Out-String | Write-Output
+          $exe = Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Name -eq 'zero.exe' } | Select-Object -First 1
+          if (-not $exe) { $exe = Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Name -eq 'firefox.exe' } | Select-Object -First 1 }
+          if (-not $exe) {
+            Write-Output "bulunan exe'ler:"
+            Get-ChildItem -LiteralPath $tmp -Recurse -File | Where-Object { $_.Extension -eq '.exe' } | Select-Object -First 5 -ExpandProperty FullName | Out-String | Write-Output
+            throw "pakette calistirilabilir yok (zero.exe/firefox.exe bulunamadi)"
+          }
           $fw = $exe.Directory
           # Politika (kanitli calisiyor)
           New-Item -ItemType Directory -Force "$($fw.FullName)/distribution" | Out-Null
