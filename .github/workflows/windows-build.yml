@@ -195,8 +195,12 @@ jobs:
           where.exe python3
           $bash = Get-Content $env:RUNNER_TEMP\moz-bash.txt
           $env:ZERO_WS = ($env:GITHUB_WORKSPACE -replace '\\','/')
+          # NOT: bash --login TTY'siz 'stty' uyarisini stderr'e basar; Stop modunda
+          # PowerShell bunu olumcul sayar. Cagri sirasinda Continue, sonuc $LASTEXITCODE ile.
+          $ErrorActionPreference = 'Continue'
           & $bash --login -c 'bash "$ZERO_WS/zero/firefox-fork/scripts/ci-windows-build.sh" "$ZERO_WS"' > "$env:RUNNER_TEMP/zero-build.log" 2>&1
           $code = $LASTEXITCODE
+          $ErrorActionPreference = 'Stop'
           Get-Content "$env:RUNNER_TEMP/zero-build.log" -Tail 60 | Out-String | Write-Output
           if ($code -ne 0) { throw "derleme patladi (exit $code) - tam log artifact'ta (zero-build-log)" }
 
