@@ -3,8 +3,8 @@
 # (fetch-and-patch.sh bunu otomatik yapar.)
 
 EXTRA_JS_MODULES.zero += [
-    "ZeroMode.sys.mjs",
     "ZeroChrome.sys.mjs",
+    "ZeroMode.sys.mjs",
     "ZeroPrefs.sys.mjs",
 ]
 
