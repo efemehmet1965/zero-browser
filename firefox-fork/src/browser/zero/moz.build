@@ -1,4 +1,4 @@
-﻿# ZERO platform modulu — browser/zero/
+# ZERO platform modulu — browser/zero/
 # Kurulum: kaynak agaca kopyalanir, browser/moz.build'e DIRS += ["zero"] eklenir.
 # (fetch-and-patch.sh bunu otomatik yapar.)
 

@@ -1,4 +1,4 @@
-﻿/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
+/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
  *
  * Install: about:config → toolkit.legacyUserProfileCustomizations.stylesheets = true,
  * then copy this file + userContent.css into <profile>/chrome/ and restart.

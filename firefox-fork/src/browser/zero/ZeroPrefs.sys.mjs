@@ -1,4 +1,4 @@
-﻿// ZeroPrefs.sys.mjs - ayar <-> pref koprusu.
+// ZeroPrefs.sys.mjs - ayar <-> pref koprusu.
 // newtab tarafi: settings/schema.ts (zero.settings.v1).
 // Pref adlari: zero.mode.active, zero.tabs.position, zero.tabs.width, zero.tabs.hover.
 const DEFAULTS = {

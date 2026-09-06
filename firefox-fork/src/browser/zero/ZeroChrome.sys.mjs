@@ -1,4 +1,4 @@
-﻿// ZeroChrome.sys.mjs - Zen-tarzı layout yonetimi.
+// ZeroChrome.sys.mjs - Zen-tarzı layout yonetimi.
 // Newtab aktifken ana pencereye zero-newtab="true" koyar,
 // userChrome.css native nav-bar'ı gizler. Normal sayfada kaldırır.
 // Konum (fork): browser/zero/ZeroChrome.sys.mjs
