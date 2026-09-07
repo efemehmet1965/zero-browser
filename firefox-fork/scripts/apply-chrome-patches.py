@@ -2,13 +2,15 @@
 """ZERO govde yamalari — anchor bazli, surum toleransli XUL/jar duzenleme.
 
 Ne yapar (firefox-esr agaci icinde):
-  1. firefox-fork/chrome/zero-chrome.{css,js} ->
-     firefox-esr/browser/base/content/zero-chrome.{css,js}
+  1. chrome/userChrome.css -> firefox-esr/browser/base/content/zero-chrome.css
+     firefox-fork/chrome/zero-chrome.js ->
+     firefox-esr/browser/base/content/zero-chrome.js
   2. browser/base/content/browser.xhtml:
-     - browser.css PI satirindan sonra zero-chrome.css PI ekler
-     - browser.js script satirindan sonra zero-chrome.js ekler
-  3. browser/base/content/jar.mn:
-     - son `content/browser/...` satirindan sonra 2 girdi ekler
+     - <head> icine zero-chrome.css <link> ekler (skin linkinden sonra,
+       tek-satir degilse <title> oncesine)
+     - </head> oncesine zero-chrome.js <script> ekler
+  3. browser/base/jar.mn: son `content/browser/...` satirindan sonra
+     2 girdi ekler (browser.jar blogu icinde kalir)
 
 Kullanim: apply-chrome-patches.py "<workspace>"
 Idempotent: ekler zaten varsa tekrar eklemez.
@@ -22,14 +24,15 @@ WS = pathlib.Path(sys.argv[1])
 ESR = WS / "firefox-esr"
 ZERO = WS / "zero"
 
-XHTML = ESR / "browser" / "base" / "content" / "browser.xhtml"
-JAR = ESR / "browser" / "base" / "content" / "jar.mn"
+CONTENT = ESR / "browser" / "base" / "content"
+XHTML = CONTENT / "browser.xhtml"
+JAR = ESR / "browser" / "base" / "jar.mn"
 
-CSS_PI = '<?xml-stylesheet href="chrome://browser/content/zero-chrome.css" type="text/css"?>'
-JS_TAG = '<script src="chrome://browser/content/zero-chrome.js"/>'
+CSS_LINK = '  <link rel="stylesheet" href="chrome://browser/content/zero-chrome.css" />'
+JS_TAG = '  <script src="chrome://browser/content/zero-chrome.js"></script>'
 JAR_LINES = [
-    "content/browser/zero-chrome.css              (zero-chrome.css)",
-    "content/browser/zero-chrome.js               (zero-chrome.js)",
+    "        content/browser/zero-chrome.css               (content/zero-chrome.css)",
+    "        content/browser/zero-chrome.js                (content/zero-chrome.js)",
 ]
 
 
@@ -43,8 +46,7 @@ def fail(msg, path=None, hints=()):
 
 
 def main():
-    # 1. dosyalar — TEK KAYNAK: chrome/userChrome.css (demo ile ayni dosya),
-    # zero-chrome.js fork'tan. Ikisi de browser.xhtml'e gomulur.
+    # 1. dosyalar — TEK KAYNAK: chrome/userChrome.css + fork zero-chrome.js
     sources = {
         "zero-chrome.css": ZERO / "chrome" / "userChrome.css",
         "zero-chrome.js": ZERO / "firefox-fork" / "chrome" / "zero-chrome.js",
@@ -52,7 +54,7 @@ def main():
     for name, src in sources.items():
         if not src.is_file():
             fail(f"kaynak yok: {src}")
-        dst = ESR / "browser" / "base" / "content" / name
+        dst = CONTENT / name
         dst.write_bytes(src.read_bytes())
         print(f"kopyalandi: {name} <- {src.relative_to(ZERO)}")
 
@@ -61,33 +63,36 @@ def main():
         fail(f"browser.xhtml yok: {XHTML}")
     x = XHTML.read_text(encoding="utf-8")
     if "zero-chrome.css" not in x:
-        m = re.search(r"^.*xml-stylesheet.*browser/skin/browser\.css.*$", x, re.M)
-        if not m:
-            cands = [ln for ln in x.splitlines() if "xml-stylesheet" in ln][:10]
-            fail("browser.css PI anchor bulunamadi", XHTML, cands)
-        x = x[: m.end()] + "\n" + CSS_PI + x[m.end():]
-        print("xhtml: css PI eklendi")
+        skin = re.search(r"^.*chrome://browser/skin/.*/>.*$", x, re.M)
+        if skin:
+            x = x[: skin.end()] + "\n" + CSS_LINK + x[skin.end():]
+            print("xhtml: css eklendi (skin sonrasi)")
+        else:
+            title = re.search(r"^.*<title.*$", x, re.M)
+            if not title:
+                cands = [ln for ln in x.splitlines() if "<link" in ln or "<title" in ln][:15]
+                fail("css anchor bulunamadi (skin linki ve <title> yok)", XHTML, cands)
+            x = x[: title.start()] + CSS_LINK + "\n" + x[title.start():]
+            print("xhtml: css eklendi (<title> oncesi)")
     else:
-        print("xhtml: css PI zaten var")
+        print("xhtml: css zaten var")
     if "zero-chrome.js" not in x:
-        m = re.search(r'^.*<script\s+src="chrome://browser/content/browser\.js".*$', x, re.M)
-        if not m:
-            cands = [ln for ln in x.splitlines() if "browser/content/browser.js" in ln][:10]
-            if not cands:
-                cands = [ln for ln in x.splitlines() if "<script" in ln][:15]
-            fail("browser.js script anchor bulunamadi", XHTML, cands)
-        x = x[: m.end()] + "\n" + JS_TAG + x[m.end():]
-        print("xhtml: js eklendi")
+        head = re.search(r"^.*</head>.*$", x, re.M)
+        if not head:
+            cands = [ln for ln in x.splitlines() if "<script" in ln or "head" in ln][:15]
+            fail("js anchor bulunamadi (</head> yok)", XHTML, cands)
+        x = x[: head.start()] + JS_TAG + "\n" + x[head.start():]
+        print("xhtml: js eklendi (</head> oncesi)")
     else:
         print("xhtml: js zaten var")
     XHTML.write_text(x, encoding="utf-8")
 
-    # 3. jar.mn
+    # 3. browser/base/jar.mn
     if not JAR.is_file():
         fail(f"jar.mn yok: {JAR}")
     j = JAR.read_text(encoding="utf-8")
     if "zero-chrome.css" not in j:
-        matches = list(re.finditer(r"^content/browser/\S+.*$", j, re.M))
+        matches = list(re.finditer(r"^\s*\*?\s*content/browser/\S+.*$", j, re.M))
         if not matches:
             cands = [ln for ln in j.splitlines() if ln.startswith("content/")][:10]
             fail("jar.mn content anchor bulunamadi", JAR, cands)
