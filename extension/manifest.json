@@ -9,7 +9,7 @@
       "strict_min_version": "109.0"
     }
   },
-  "permissions": ["storage", "tabs", "https://api.pwnedpasswords.com/*"],
+  "permissions": ["storage", "tabs", "bookmarks", "history", "downloads", "https://api.pwnedpasswords.com/*"],
   "chrome_url_overrides": {
     "newtab": "dist/index.html"
   },

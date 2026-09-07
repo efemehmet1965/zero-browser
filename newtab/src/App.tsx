@@ -1,4 +1,5 @@
 import SearchBar from './components/SearchBar';
+import LibraryPanel, { type LibraryView } from './components/LibraryPanel';
 import SettingsPanel from './components/SettingsPanel';
 import Shortcuts from './components/Shortcuts';
 import RecentWorkspaces from './components/RecentWorkspaces';
@@ -10,7 +11,7 @@ import Toolbar from './components/Toolbar';
 import VerticalTabs, { type VTab } from './components/VerticalTabs';
 import WindowBar from './components/WindowBar';
 import ZeroLogo from './components/ZeroLogo';
-import { MODES } from './modes';
+import { MODES, MODE_ORDER } from './modes';
 import { useZeroSettings } from './settings/useZeroSettings';
 import { useZeroState } from './store';
 import { useMemo, useState } from 'react';
@@ -24,6 +25,7 @@ export default function App() {
   const mode = MODES[state.activeModeId] ?? MODES.standard;
   const shortcuts = [...mode.builtins, ...state.customs];
   const [closed, setClosed] = useState<string[]>([]);
+  const [libView, setLibView] = useState<LibraryView | null>(null);
 
   const tabs = useMemo(() => {
     const ws = state.workspaces.find((w) => w.id === state.activeWorkspaceId);
@@ -41,6 +43,11 @@ export default function App() {
     setSettingsMode(id);
   };
 
+  const cycleMode = () => {
+    const i = MODE_ORDER.indexOf(mode.id);
+    handleMode(MODE_ORDER[(i + 1) % MODE_ORDER.length]);
+  };
+
   const panelRight = settings.tabsPosition === 'right';
 
   const activeWs = state.workspaces.find((w) => w.id === state.activeWorkspaceId);
@@ -48,10 +55,10 @@ export default function App() {
   return (
     <div className="flex h-full flex-col bg-black text-white">
       <WindowBar workspace={activeWs?.name} />
-      <Toolbar accent={mode.dot} />
+      <Toolbar accent={mode.dot} onCycleMode={cycleMode} />
       <div className="flex min-h-0 flex-1 border-t border-[#1E1E1E]">
         {!panelRight && (
-          <aside className="flex shrink-0 border-r border-[#1E1E1E] bg-[#0A0A0A]">
+          <aside className="relative flex shrink-0 border-r border-[#1E1E1E] bg-[#0A0A0A]">
             <VerticalTabs
               mode={mode.id}
               tabs={tabs}
@@ -59,7 +66,8 @@ export default function App() {
               hoverExpand={settings.hoverExpand}
               onClose={(id) => setClosed((c) => [...c, id])}
             />
-            <Sidebar />
+            <Sidebar onLibrary={setLibView} />
+            {libView && <LibraryPanel view={libView} onClose={() => setLibView(null)} />}
           </aside>
         )}
         <main className="flex min-w-0 flex-1 items-start justify-center overflow-y-auto bg-black">
@@ -88,13 +96,15 @@ export default function App() {
               activeId={state.activeWorkspaceId}
               onSelect={setActiveWorkspace}
             />
+            <div id="recent-workspaces" className="sr-only">workspace bölümü</div>
 
             <RouterPanel workspaces={state.workspaces} />
           </div>
         </main>
         {panelRight && (
-          <aside className="flex shrink-0 border-l border-[#1E1E1E] bg-[#0A0A0A]">
-            <Sidebar />
+          <aside className="relative flex shrink-0 border-l border-[#1E1E1E] bg-[#0A0A0A]">
+            <Sidebar onLibrary={setLibView} />
+            {libView && <LibraryPanel view={libView} onClose={() => setLibView(null)} />}
             <VerticalTabs
               mode={mode.id}
               tabs={tabs}

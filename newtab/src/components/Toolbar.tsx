@@ -33,7 +33,7 @@ function goProtections() {
   }
 }
 
-export default function Toolbar({ accent }: { accent: string }) {
+export default function Toolbar({ accent, onCycleMode }: { accent: string; onCycleMode: () => void }) {
   // Etiket ilk render'da değil mount sonrası okunur: spoof (history.replaceState)
   // App effect'inde çalışır, o yüzden setTimeout + hashchange ile senkron tutulur.
   const [label, setLabel] = useState('zero://newtab');
@@ -79,7 +79,7 @@ export default function Toolbar({ accent }: { accent: string }) {
         <span className="flex-1" />
         <button className="text-[#888] hover:text-white" aria-label="URL'yi kopyala" title={starred ? 'Kopyalandı ✓' : "URL'yi kopyala"} onClick={copyUrl}><IconStar size={15} /></button>
         <button className="text-[#888] hover:text-white" aria-label="Korumalar" title="about:protections" onClick={goProtections}><IconShield size={15} /></button>
-        <span className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white" style={{ background: accent }} title="Aktif mod rengi">Z</span>
+        <button className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white hover:brightness-125" style={{ background: accent }} title="Modu değiştir" aria-label="Modu değiştir" onClick={onCycleMode}>Z</button>
         <button className="text-[#888] hover:text-white" aria-label="Ayarları aç" onClick={openSettings}><IconDots size={15} /></button>
       </div>
     </div>

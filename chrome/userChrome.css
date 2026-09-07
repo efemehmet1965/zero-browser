@@ -234,13 +234,26 @@ findbar {
   border-radius: 999px !important;
 }
 
-/* === Pencere kontrolleri === */
+/* === Pencere kontrolleri: lüks, geniş tıklama alanı === */
+.titlebar-buttonbox-container {
+  padding-right: 8px !important;
+}
 .titlebar-buttonbox-container .titlebar-button {
   color: var(--zero-muted) !important;
+  min-width: 52px !important;
+  min-height: 40px !important;
+  border-radius: 10px !important;
+  margin: 4px 2px !important;
+  transition: background-color 150ms ease, color 150ms ease !important;
 }
 .titlebar-buttonbox-container .titlebar-button:hover {
   background: var(--zero-card) !important;
   color: #fff !important;
+}
+.titlebar-buttonbox-container .titlebar-close:hover {
+  background: linear-gradient(135deg, #ff3b30, #e30613) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(227, 6, 19, 0.55) !important;
 }
 
 /* === Firefox kalintilarini gizle === */

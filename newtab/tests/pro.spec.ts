@@ -187,3 +187,34 @@ test('WindowBar sahte kontrol içermez, workspace adını gösterir', async ({ p
   await expect(page.getByText('ZERO', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Design System').first()).toBeVisible();
 });
+
+test('Kenar çubuğu kitaplık açar (önizlemede dürüst not)', async ({ page }) => {
+  await page.getByRole('button', { name: 'Bookmarks' }).click();
+  await expect(page.getByLabel('Yer İmleri paneli')).toBeVisible();
+  await expect(page.getByText('Kitaplık tarayıcıda çalışır')).toBeVisible();
+  await page.getByRole('button', { name: 'Kitaplığı kapat' }).click();
+  await expect(page.getByLabel('Yer İmleri paneli')).toHaveCount(0);
+});
+
+test('Z rozeti modu döndürür', async ({ page }) => {
+  // Baslangic moduna bagimsiz: bir adim ilerledigini dogrula (beforeEach Developer'a alir).
+  const order = ['standard', 'developer', 'cyber', 'privacy'] as const;
+  const probe = { standard: 'ZERO Repo', developer: 'Stack Overflow', cyber: 'VirusTotal', privacy: 'Proton Mail' } as const;
+  const before = await page.evaluate(() => JSON.parse(localStorage.getItem('zero.state.v2') ?? '{}').activeModeId);
+  const expected = order[(order.indexOf(before) + 1) % order.length];
+  await page.getByRole('button', { name: 'Modu değiştir' }).click();
+  await expect
+    .poll(async () => JSON.parse(await page.evaluate(() => localStorage.getItem('zero.state.v2') ?? '{}')).activeModeId)
+    .toBe(expected);
+  await expect(page.getByText(probe[expected], { exact: true })).toBeVisible();
+});
+
+test('X şeridi simge rayına iner', async ({ page }) => {
+  await page.getByRole('button', { name: 'Close sidebar' }).click();
+  await expect(page.getByText('Bookmarks', { exact: true })).toBeHidden();
+});
+
+test('Settings düğmesi ayar panelini açar', async ({ page }) => {
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('button', { name: 'Geniş', exact: true })).toBeVisible();
+});
