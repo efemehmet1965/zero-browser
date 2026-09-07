@@ -13,6 +13,43 @@
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 
+/* ZERO açılış animasyonu: harfler yükselir, halka çizilir, kesik düşer (~0.9sn) */
+.zero-boot .zero-letter {
+  opacity: 0;
+  animation: zero-rise 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.zero-boot .zero-ring {
+  stroke-dasharray: 276.5;
+  stroke-dashoffset: 276.5;
+  animation: zero-draw 0.7s ease-out 0.15s forwards;
+}
+.zero-boot .zero-cut {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: zero-drop 0.35s ease-in 0.7s forwards;
+}
+@keyframes zero-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes zero-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes zero-drop {
+  from { opacity: 0; transform: scale(1.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zero-boot .zero-letter,
+  .zero-boot .zero-ring,
+  .zero-boot .zero-cut {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
 html,
 body,
 #root {

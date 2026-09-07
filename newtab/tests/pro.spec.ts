@@ -218,3 +218,9 @@ test('Settings düğmesi ayar panelini açar', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings' }).click();
   await expect(page.getByRole('button', { name: 'Geniş', exact: true })).toBeVisible();
 });
+
+test('Z logosu açılış animasyonuyla gelir', async ({ page }) => {
+  const logo = page.getByTestId('zero-logo');
+  await expect(logo).toBeVisible();
+  await expect(logo).toHaveClass(/zero-boot/);
+});
