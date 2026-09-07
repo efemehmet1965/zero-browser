@@ -170,6 +170,11 @@ jobs:
             (Get-Content $_.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $_.FullName -NoNewline:$false
           }
           Write-Output "visualelements: $($vem.Count) yeniden adlandirildi"
+          $brMb = Join-Path $dst 'moz.build'
+          if ((Test-Path $brMb) -and ((Get-Content $brMb -Raw) -match 'firefox\.VisualElementsManifest\.xml')) {
+            (Get-Content $brMb -Raw) -replace 'firefox\.VisualElementsManifest\.xml','zero.VisualElementsManifest.xml' | Set-Content $brMb -NoNewline:$false
+            Write-Output "branding moz.build VisualElements adi guncellendi"
+          }
           # Gorunur urun adi: Firefox -> ZERO (baglanti satirlari haric, sozdizimi korunur)
           foreach ($lr in @('firefox-esr/browser/locales/en-US', 'firefox-esr/toolkit/locales/en-US')) {
             if (-not (Test-Path $lr)) { Write-Output "yerel kok yok (atlaniyor): $lr"; continue }
