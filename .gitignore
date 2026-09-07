@@ -6,3 +6,5 @@ obj-zero/
 .DS_Store
 Thumbs.db
 newtab/test-results/
+__pycache__/
+*.pyc
