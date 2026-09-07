@@ -170,6 +170,12 @@ jobs:
             (Get-Content $_.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $_.FullName -NoNewline:$false
           }
           Write-Output "visualelements: $($vem.Count) yeniden adlandirildi"
+          $brCommon = 'firefox-esr/browser/branding/branding-common.mozbuild'
+          $bcc = Get-Content $brCommon -Raw
+          if ($bcc -match '"firefox\.VisualElementsManifest\.xml"') {
+            $bcc -replace '"firefox\.VisualElementsManifest\.xml"','"zero.VisualElementsManifest.xml"' | Set-Content $brCommon -NoNewline:$false
+            Write-Output "branding-common manifest adi guncellendi"
+          } else { throw "branding-common manifest satiri bulunamadi" }
           $brMb = Join-Path $dst 'moz.build'
           if ((Test-Path $brMb) -and ((Get-Content $brMb -Raw) -match 'firefox\.VisualElementsManifest\.xml')) {
             (Get-Content $brMb -Raw) -replace 'firefox\.VisualElementsManifest\.xml','zero.VisualElementsManifest.xml' | Set-Content $brMb -NoNewline:$false
