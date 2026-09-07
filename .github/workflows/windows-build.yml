@@ -237,6 +237,19 @@ jobs:
               Write-Output "UYARI: zero/firefox.exe yok, tek aday kullaniliyor: $($exe.FullName)"
             }
           }
+          if (-not $exe) {
+            Write-Output "UYARI: pakette ana exe yok, dist/bin'den tamamlaniyor"
+            Write-Output "dist/bin exe'ler:"
+            Get-ChildItem -LiteralPath 'obj-zero/dist/bin' -File | Where-Object { $_.Extension -eq '.exe' } | Select-Object -ExpandProperty Name | Out-String | Write-Output
+            $srcExe = Get-ChildItem -LiteralPath 'obj-zero/dist/bin' -File | Where-Object { $_.Name -eq 'zero.exe' } | Select-Object -First 1
+            if (-not $srcExe) { $srcExe = Get-ChildItem -LiteralPath 'obj-zero/dist/bin' -File | Where-Object { $_.Name -eq 'firefox.exe' } | Select-Object -First 1 }
+            if (-not $srcExe) { throw "dist/bin'de de ana exe yok, paket bozuk" }
+            $fw = (Get-ChildItem -LiteralPath $tmp -Directory | Select-Object -First 1).FullName
+            if (-not $fw) { $fw = $tmp }
+            Copy-Item -LiteralPath $srcExe.FullName -Destination (Join-Path $fw $srcExe.Name) -Force
+            Write-Output "tamamlandi: $($srcExe.Name) -> $fw"
+            $exe = Get-Item -LiteralPath (Join-Path $fw $srcExe.Name)
+          }
           if (-not $exe) { throw "pakette calistirilabilir yok (zero.exe/firefox.exe bulunamadi)" }
           $fw = $exe.Directory
           Write-Output "calistirilabilir: $($exe.FullName)"
