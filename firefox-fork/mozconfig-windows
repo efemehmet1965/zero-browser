@@ -1,8 +1,9 @@
-# ZERO Windows derleme konfigi (artifact build - motor hazir iner).
-# Kullanim: bu dosyayi firefox-esr kokune .mozconfig olarak kopyala.
+# ZERO Windows derleme konfigi (FULL build - govde degisikligi icin).
+# Artifact KAPALI: XUL/CSS/JS yamalari ve branding kaynaktan derlenir.
+# Sure: GH-hosted sinir 360dk; ilk full build sinira yakin olabilir.
 ac_add_options --enable-application=browser
 ac_add_options --disable-tests
-ac_add_options --enable-artifact-builds
+ac_add_options --enable-optimize
 ac_add_options --with-branding=browser/branding/zero
 # Binary + profil klasoru adi: firefox.exe -> zero.exe
 ac_add_options --with-app-name=zero

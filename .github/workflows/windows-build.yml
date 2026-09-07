@@ -38,6 +38,9 @@ jobs:
             'zero/firefox-fork/src/browser/zero/ZeroMode.sys.mjs',
             'zero/firefox-fork/src/browser/zero/ZeroChrome.sys.mjs',
             'zero/firefox-fork/src/browser/zero/ZeroPrefs.sys.mjs',
+            'zero/firefox-fork/chrome/zero-chrome.css',
+            'zero/firefox-fork/chrome/zero-chrome.js',
+            'zero/firefox-fork/scripts/apply-chrome-patches.py',
             'zero/chrome/userChrome.css',
             'zero/chrome/userContent.css'
           )
@@ -88,6 +91,15 @@ jobs:
             }
           }
           hg --cwd firefox-esr id -i
+
+      - name: Govde yamalari (XUL/jar)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $py = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $py) { throw "govde yamasi icin python bulunamadi" }
+          & $py.FullName "$env:GITHUB_WORKSPACE/zero/firefox-fork/scripts/apply-chrome-patches.py" "$env:GITHUB_WORKSPACE"
+          if ($LASTEXITCODE -ne 0) { throw "govde yamalari patladi" }
+          Write-Output "govde yamalari OK"
 
       - name: Node kur (npm cache)
         uses: actions/setup-node@v4

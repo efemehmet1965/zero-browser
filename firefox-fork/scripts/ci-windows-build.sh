@@ -40,5 +40,5 @@ cd "$ESR"
 test -f obj-zero/dist/bin/zero.exe || test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: zero.exe/firefox.exe uretilmedi"; exit 1; }
 ./mach package
 echo "== system addon dogrulama (omni.ja) =="
-python3 -c "import glob,zipfile; cs=glob.glob('obj-zero/dist/**/omni.ja', recursive=True); print('omni:',cs); assert cs,'omni.ja bulunamadi'; names=[n for c in cs for n in zipfile.ZipFile(c).namelist()]; req=['builtin-addons/zero-newtab/dist/index.html','ZeroMode.sys.mjs','ZeroChrome.sys.mjs','ZeroPrefs.sys.mjs']; [print(r,'->',bool([n for n in names if r in n])) or __import__('sys').exit(f'pakette yok: '+r) for r in req if not [n for n in names if r in n]]; print('omni dogrulama OK')"
+python3 -c "import glob,zipfile; cs=glob.glob('obj-zero/dist/**/omni.ja', recursive=True); print('omni:',cs); assert cs,'omni.ja bulunamadi'; names=[n for c in cs for n in zipfile.ZipFile(c).namelist()]; req=['builtin-addons/zero-newtab/dist/index.html','ZeroMode.sys.mjs','ZeroChrome.sys.mjs','ZeroPrefs.sys.mjs','zero-chrome.js','zero-chrome.css']; [print(r,'->',bool([n for n in names if r in n])) or __import__('sys').exit(f'pakette yok: '+r) for r in req if not [n for n in names if r in n]]; print('omni dogrulama OK')"
 echo "BUILD OK"
