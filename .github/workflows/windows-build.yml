@@ -159,6 +159,32 @@ jobs:
           }
           if (-not (Select-String -Path "$dst/locales/en-US/brand.properties" -Pattern 'ZERO' -Quiet)) { throw "branding sed tutmadi" }
           Write-Output "branding OK"
+          # VisualElements: firefox.* -> zero.* (Baslat kutucuk adi + simgeler)
+          $vem = @(Get-ChildItem -Recurse -Path $dst -Filter 'firefox.VisualElementsManifest.xml' -File -ErrorAction SilentlyContinue)
+          foreach ($v in $vem) {
+            $nz = Join-Path $v.DirectoryName 'zero.VisualElementsManifest.xml'
+            (Get-Content $v.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $nz -NoNewline:$false
+            Remove-Item $v.FullName -Force
+          }
+          Get-ChildItem -Recurse -Path $dst -Filter 'private_browsing*' -File -ErrorAction SilentlyContinue | ForEach-Object {
+            (Get-Content $_.FullName -Raw) -replace 'Firefox','ZERO' | Set-Content $_.FullName -NoNewline:$false
+          }
+          Write-Output "visualelements: $($vem.Count) yeniden adlandirildi"
+          # Gorunur urun adi: Firefox -> ZERO (baglanti satirlari haric, sozdizimi korunur)
+          foreach ($lr in @('firefox-esr/browser/locales/en-US', 'firefox-esr/toolkit/locales/en-US')) {
+            if (-not (Test-Path $lr)) { Write-Output "yerel kok yok (atlaniyor): $lr"; continue }
+            $n = 0
+            foreach ($f in (Get-ChildItem -Recurse -Path $lr -Include '*.ftl','*.properties','*.dtd' -File)) {
+              $changed = $false
+              $out = foreach ($ln in (Get-Content $f.FullName)) {
+                if ($ln -match 'http|mozilla') { $ln }
+                elseif ($ln -match 'Firefox') { $changed = $true; $ln -replace 'Firefox','ZERO' }
+                else { $ln }
+              }
+              if ($changed) { $out | Set-Content $f.FullName; $n++ }
+            }
+            Write-Output "urun adi yamasi: $lr ($n dosya)"
+          }
 
       - name: MozillaBuild kur
         run: |
