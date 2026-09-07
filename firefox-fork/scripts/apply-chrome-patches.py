@@ -43,14 +43,18 @@ def fail(msg, path=None, hints=()):
 
 
 def main():
-    # 1. dosyalar
-    for name in ("zero-chrome.css", "zero-chrome.js"):
-        src = ZERO / "firefox-fork" / "chrome" / name
+    # 1. dosyalar — TEK KAYNAK: chrome/userChrome.css (demo ile ayni dosya),
+    # zero-chrome.js fork'tan. Ikisi de browser.xhtml'e gomulur.
+    sources = {
+        "zero-chrome.css": ZERO / "chrome" / "userChrome.css",
+        "zero-chrome.js": ZERO / "firefox-fork" / "chrome" / "zero-chrome.js",
+    }
+    for name, src in sources.items():
         if not src.is_file():
             fail(f"kaynak yok: {src}")
         dst = ESR / "browser" / "base" / "content" / name
         dst.write_bytes(src.read_bytes())
-        print(f"kopyalandi: {name}")
+        print(f"kopyalandi: {name} <- {src.relative_to(ZERO)}")
 
     # 2. browser.xhtml
     if not XHTML.is_file():

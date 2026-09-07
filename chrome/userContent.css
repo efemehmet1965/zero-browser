@@ -1,6 +1,8 @@
-/* ZERO userContent.css — paints about: pages black so the demo never
- * flashes white between newtab loads. Same install as userChrome.css. */
+/* ZERO userContent.css — about:* sayfalarinin TAMAMI (ayarlar, eklentiler,
+ * korumalar, config). Firefox icerik degiskenleri ezer, beyaz parlama biter.
+ * userChrome.css ile ayni kurulum. */
 
+/* --- Beyaz parlamaya karsi genel zemin --- */
 @-moz-document url(about:newtab), url(about:home), url(about:blank), url-prefix(about:) {
   body,
   html {
@@ -9,8 +11,52 @@
   }
 }
 
-/* If the built React newtab is previewed outside moz-extension:// (vite dev,
- * file://), enforce the same black canvas. */
+/* --- Ayarlar + eklentiler + korumalar + config: tam ZERO temasi --- */
+@-moz-document url(about:preferences), url(about:addons), url(about:protections),
+  url(about:config), url(about:downloads), url(about:logins), url(about:profiles) {
+  :root {
+    color-scheme: dark !important;
+    --in-content-page-background: #000 !important;
+    --in-content-page-color: #fff !important;
+    --in-content-text-color: #ddd !important;
+    --in-content-box-background: #0a0a0a !important;
+    --in-content-box-background-odd: #111 !important;
+    --in-content-box-border-color: #2a2a2a !important;
+    --in-content-box-info-background: #141414 !important;
+    --in-content-button-background: #1a1a1a !important;
+    --in-content-button-text-color: #fff !important;
+    --in-content-button-border-color: #2a2a2a !important;
+    --in-content-primary-button-background: #e30613 !important;
+    --in-content-primary-button-text-color: #fff !important;
+    --in-content-accent-color: #e30613 !important;
+    --in-content-link-color: #7dd3fc !important;
+    --in-content-table-background: #0a0a0a !important;
+    --in-content-table-border-color: #2a2a2a !important;
+    --in-content-table-header-background: #141414 !important;
+    --in-content-category-text: #aaa !important;
+    --in-content-category-text-selected: #fff !important;
+    --in-content-category-background-selected: #1a1a1a !important;
+    --in-content-category-border-focus: #e30613 !important;
+  }
+  .card,
+  .addon-card,
+  section,
+  .subcategory {
+    background: #0a0a0a !important;
+    border-color: #1e1e1e !important;
+    border-radius: 14px !important;
+  }
+  input,
+  select,
+  menulist {
+    background: #1e1e1e !important;
+    color: #fff !important;
+    border-color: #2a2a2a !important;
+    border-radius: 8px !important;
+  }
+}
+
+/* Eklenti onizlemesi moz-extension/file/localhost disinda da siyah zemin */
 @-moz-document url-prefix(moz-extension://), url-prefix(file://), url-prefix(http://localhost:),
   url-prefix(http://127.0.0.1:) {
   body {

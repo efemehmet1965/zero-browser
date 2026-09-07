@@ -1,11 +1,10 @@
-/* ZERO userChrome.css — MVP demo theming (no Firefox rebuild required).
+/* ZERO tam govde temasi — browser'in TAMAMI (toolbar, menuler, paneller,
+ * popup'lar, sidebar, diyaloglar). Tek kaynak: bu dosya hem demo profiline
+ * (install.ps1) hem derlemeye (zero-chrome.css olarak) girer.
  *
- * Install: about:config → toolkit.legacyUserProfileCustomizations.stylesheets = true,
- * then copy this file + userContent.css into <profile>/chrome/ and restart.
- *
- * Goal: native tab bar + toolbar in pure black with the red active-tab
- * indicator, so the React newtab content (fake WindowBar/Toolbar/Sidebar)
- * blends seamlessly at 1280x720.
+ * Install (demo): about:config ->
+ *   toolkit.legacyUserProfileCustomizations.stylesheets = true,
+ *   chrome/*.css -> <profil>/chrome/, restart.
  */
 
 :root {
@@ -18,94 +17,78 @@
   --zero-red: #e30613;
   --zero-text: #ffffff;
   --zero-muted: #888888;
+
+  /* Firefox panel/menu degiskenleri — tum popup'lari boyar */
+  --arrowpanel-background: #0a0a0a !important;
+  --arrowpanel-color: #ffffff !important;
+  --arrowpanel-border-color: #2a2a2a !important;
+  --panel-background: #0a0a0a !important;
+  --panel-color: #ffffff !important;
+  --panel-border-color: #2a2a2a !important;
+  --toolbar-bgcolor: #000000 !important;
+  --toolbar-color: #ffffff !important;
+  --lwt-accent-color: #000000 !important;
+  --lwt-text-color: #ffffff !important;
+  --lwt-toolbar-field-background-color: #1e1e1e !important;
+  --lwt-toolbar-field-color: #dddddd !important;
 }
 
-/* --- Top chrome: pure black --- */
+/* === Cerceve: saf siyah === */
 #navigator-toolbox,
 #titlebar,
 #TabsToolbar,
 #toolbar-menubar,
 #nav-bar,
-#PersonalToolbar {
+#PersonalToolbar,
+#status-bar {
   background: var(--zero-black) !important;
   background-image: none !important;
   border: none !important;
   color: var(--zero-text) !important;
 }
-
 #navigator-toolbox {
   border-bottom: 1px solid var(--zero-border) !important;
 }
-
-/* --- Tabs: dark #1A1A1A, rounded top 8px, red top line on active --- */
-.tabbrowser-tab .tab-background {
-  background: transparent !important;
-  border: none !important;
-  border-radius: 8px 8px 0 0 !important;
-  margin-block: 2px 0 !important;
+#navigator-toolbox::after,
+#nav-bar::after {
+  display: none !important;
 }
 
-.tabbrowser-tab:not([selected]) .tab-background {
-  background: transparent !important;
-}
-.tabbrowser-tab:not([selected]):hover .tab-background {
-  background: #141414 !important;
-}
+/* === Yatay sekme seridi YOK (sekmeler dikey seritte) === */
+#TabsToolbar { display: none !important; }
+#titlebar { appearance: none !important; background: #000 !important; }
 
-.tabbrowser-tab[selected] .tab-background,
-.tabbrowser-tab[visuallyselected] .tab-background {
-  background: var(--zero-card) !important;
-  position: relative;
+/* === Tum toolbar dugmeleri === */
+.toolbarbutton-1,
+.toolbarbutton-icon,
+.toolbarbutton-text {
+  fill: #aaa !important;
+  color: #ddd !important;
 }
-
-/* 2px red top indicator on the active tab */
-.tabbrowser-tab[selected] .tab-background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 8px;
-  right: 8px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--zero-red);
+#back-button .toolbarbutton-icon { fill: #fff !important; }
+#forward-button[disabled] .toolbarbutton-icon { fill: #444 !important; }
+toolbar .toolbarbutton-1:hover > .toolbarbutton-icon,
+toolbar .toolbarbutton-1:hover {
+  background: #1a1a1a !important;
+  fill: #fff !important;
 }
-
-.tabbrowser-tab .tab-label,
-.tabbrowser-tab .tab-text {
-  color: #bbb !important;
+toolbarbutton.bookmark-item {
+  color: #aaa !important;
 }
-.tabbrowser-tab[selected] .tab-label {
+toolbarbutton.bookmark-item:hover {
+  background: #1a1a1a !important;
   color: #fff !important;
 }
-.tabbrowser-tab .tab-close-button {
-  color: var(--zero-muted) !important;
-}
 
-/* New-tab "+" button */
-#tabs-newtab-button,
-#new-tab-button {
-  fill: var(--zero-muted) !important;
+/* === Adres cubugu: hap === */
+#nav-bar {
+  padding: 6px 10px !important;
+  min-height: 48px !important;
 }
-#tabs-newtab-button:hover,
-#new-tab-button:hover {
-  fill: #fff !important;
-  background: var(--zero-card) !important;
+#nav-bar #urlbar-container {
+  max-width: 640px !important;
+  margin: 0 auto !important;
 }
-
-/* --- Toolbar buttons: white back, gray forward/refresh --- */
-#back-button .toolbarbutton-icon {
-  fill: #fff !important;
-}
-#forward-button .toolbarbutton-icon,
-#reload-button .toolbarbutton-icon,
-#stop-button .toolbarbutton-icon {
-  fill: #aaa !important;
-}
-#forward-button[disabled] .toolbarbutton-icon {
-  fill: #444 !important;
-}
-
-/* --- Address bar: pill, #1E1E1E, rounded-full --- */
 #urlbar-container,
 #urlbar {
   --urlbar-box-bgcolor: var(--zero-pill) !important;
@@ -127,8 +110,6 @@
 #tracking-protection-icon-container {
   color: #ddd !important;
 }
-
-/* Star / shield / avatar / menu in the address bar row */
 #star-button,
 #tracking-protection-icon-box,
 #identity-icon-box,
@@ -138,7 +119,87 @@
   color: var(--zero-muted) !important;
 }
 
-/* --- Sidebar: 180px, #0A0A0A, right border --- */
+/* === Adres cubugu acilir sonuclari === */
+#urlbar-results,
+.urlbarView {
+  background: #0a0a0a !important;
+  color: #ddd !important;
+  border-radius: 0 0 16px 16px !important;
+}
+.urlbarView-row {
+  border-radius: 8px !important;
+}
+.urlbarView-row[selected],
+.urlbarView-row:hover {
+  background: #1a1a1a !important;
+}
+.urlbarView-title,
+.urlbarView-url,
+.urlbarView-action {
+  color: #ddd !important;
+}
+
+/* === Menuler (sag tik + menu cubugu) === */
+menupopup,
+menupopup > menu > menupopup {
+  --panel-background: #0a0a0a !important;
+  --panel-color: #ddd !important;
+  --panel-border-color: #2a2a2a !important;
+  background: #0a0a0a !important;
+  border: 1px solid #2a2a2a !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+}
+menuitem,
+menu {
+  color: #ddd !important;
+  border-radius: 8px !important;
+}
+menuitem:hover,
+menu:hover,
+menu[_moz-menuactive="true"],
+menuitem[_moz-menuactive="true"] {
+  background: #1a1a1a !important;
+  color: #fff !important;
+}
+menuitem[disabled="true"],
+menu[disabled="true"] {
+  color: #555 !important;
+}
+menuseparator {
+  border-color: #1e1e1e !important;
+}
+
+/* === Paneller (hamburger, eklenti, kimlik, korumalar, indirilenler) === */
+.panel-arrowcontent,
+#appMenu-popup .panel-arrowcontent,
+#customizationui-widget-panel .panel-arrowcontent,
+#identity-popup,
+#protections-popup,
+#downloadsPanel,
+#widget-overflow {
+  background: #0a0a0a !important;
+  color: #ddd !important;
+  border: 1px solid #2a2a2a !important;
+  border-radius: 14px !important;
+}
+.panel-subview-body,
+.panel-header,
+.panel-footer {
+  background: transparent !important;
+  color: #ddd !important;
+}
+.subviewbutton,
+.toolbarbutton.subviewbutton {
+  color: #ccc !important;
+  border-radius: 8px !important;
+}
+.subviewbutton:hover {
+  background: #1a1a1a !important;
+  color: #fff !important;
+}
+
+/* === Kenar cubugu === */
 #sidebar-box {
   background: var(--zero-surface) !important;
   min-width: 180px !important;
@@ -150,17 +211,30 @@
   border-bottom: 1px solid var(--zero-border) !important;
   color: var(--zero-text) !important;
 }
-#sidebar {
+#sidebar,
+#sidebar-content {
   background: var(--zero-surface) !important;
 }
-
-/* Bookmarks toolbar + status bar blend into black */
 #PersonalToolbar {
   background: var(--zero-black) !important;
   color: var(--zero-muted) !important;
 }
 
-/* Window controls (Windows style, right side) */
+/* === Bul cubugu + durum === */
+#FindToolbar,
+findbar {
+  background: #0a0a0a !important;
+  color: #ddd !important;
+  border-top: 1px solid #1e1e1e !important;
+}
+.findbar-textbox {
+  background: #1e1e1e !important;
+  color: #fff !important;
+  border: 1px solid #2a2a2a !important;
+  border-radius: 999px !important;
+}
+
+/* === Pencere kontrolleri === */
 .titlebar-buttonbox-container .titlebar-button {
   color: var(--zero-muted) !important;
 }
@@ -169,34 +243,12 @@
   color: #fff !important;
 }
 
-/* Hide light-theme artifacts: remove default separators/shadows */
-#navigator-toolbox::after,
-#nav-bar::after {
-  display: none !important;
-}
+/* === Firefox kalintilarini gizle === */
+#pocket-button,
+#fxa-toolbar-menu-button,
+#overflow-button { display: none !important; }
 
-/* === ZERO distinct browser layout (Zen-style) === */
-/* Amaç: yatay Firefox sekme şeridini tamamen kaldır, tek parça ZERO görünümü.
-   Newtab içindeki sahte WindowBar/Toolbar artık ASIL bar olur, çift bar biter. */
-
-/* 1. Yatay tab bar yok: dikey/sidebar düzen */
-#TabsToolbar { display: none !important; }
-#titlebar { appearance: none !important; background: #000 !important; }
-
-/* 2. Nav-bar kompakt hap: newtab dışında gezinme için tek satır */
-#nav-bar {
-  background: #000 !important;
-  padding: 6px 10px !important;
-  min-height: 48px !important;
-}
-#nav-bar #urlbar-container { max-width: 640px !important; margin: 0 auto !important; }
-
-/* Firefox kalıntılarını gizle: cep, liste, sponsor */
-#pocket-button, #fxa-toolbar-menu-button, #overflow-button { display: none !important; }
-
-/* 3. Newtab aktifken native nav-bar da gizlenir (ZeroChrome.sys.mjs
-   :root üzerine zero-newtab="true" koyar). Böylece sadece React Toolbar görünür. */
+/* === Newtab aktifken native nav-bar da gizli (zero-chrome.js attribute koyar) === */
 :root[zero-newtab="true"] #nav-bar,
 :root[zero-newtab="true"] #PersonalToolbar { display: none !important; }
 :root[zero-newtab="true"] #navigator-toolbox { border-bottom: none !important; }
-

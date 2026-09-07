@@ -38,9 +38,8 @@ jobs:
             'zero/firefox-fork/src/browser/zero/ZeroMode.sys.mjs',
             'zero/firefox-fork/src/browser/zero/ZeroChrome.sys.mjs',
             'zero/firefox-fork/src/browser/zero/ZeroPrefs.sys.mjs',
-            'zero/firefox-fork/chrome/zero-chrome.css',
-            'zero/firefox-fork/chrome/zero-chrome.js',
             'zero/firefox-fork/scripts/apply-chrome-patches.py',
+            'zero/firefox-fork/chrome/zero-chrome.js',
             'zero/chrome/userChrome.css',
             'zero/chrome/userContent.css'
           )
