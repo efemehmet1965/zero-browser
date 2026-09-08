@@ -20,6 +20,9 @@ if ! grep -q "ZERO defaults" "$ESR/browser/app/profile/firefox.js"; then
 cat >> "$ESR/browser/app/profile/firefox.js" <<'EOF'
 // ZERO defaults (MVP)
 pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+pref("browser.startup.homepage", "about:newtab");
+pref("browser.newtabpage.enabled", true);
+pref("zero.newtab.url", "about:newtab");
 pref("browser.pocket.enabled", false);
 pref("datareporting.healthreport.uploadEnabled", false);
 pref("app.shield.optoutstudies.enabled", false);
