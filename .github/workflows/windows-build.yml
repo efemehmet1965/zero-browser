@@ -180,6 +180,13 @@ jobs:
             $bcc | Set-Content $brCommon -NoNewline:$false
             Write-Output "branding-common manifest adi+sirasi guncellendi"
           } else { throw "manifest sira duzeni bulunamadi" }
+          # Paket listesi de eski manifest adini bekler
+          $pm = 'firefox-esr/browser/installer/package-manifest.in'
+          $pmc = Get-Content $pm -Raw
+          if ($pmc -match 'firefox\.VisualElementsManifest\.xml') {
+            $pmc -replace 'firefox\.VisualElementsManifest\.xml','zero.VisualElementsManifest.xml' | Set-Content $pm -NoNewline:$false
+            Write-Output "package-manifest manifest adi guncellendi"
+          } else { Write-Output "uyari: package-manifest'te manifest satiri yok" }
           $brMb = Join-Path $dst 'moz.build'
           if ((Test-Path $brMb) -and ((Get-Content $brMb -Raw) -match 'firefox\.VisualElementsManifest\.xml')) {
             (Get-Content $brMb -Raw) -replace 'firefox\.VisualElementsManifest\.xml','zero.VisualElementsManifest.xml' | Set-Content $brMb -NoNewline:$false
