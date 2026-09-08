@@ -171,11 +171,15 @@ jobs:
           }
           Write-Output "visualelements: $($vem.Count) yeniden adlandirildi"
           $brCommon = 'firefox-esr/browser/branding/branding-common.mozbuild'
-          $bcc = Get-Content $brCommon -Raw
-          if ($bcc -match '"firefox\.VisualElementsManifest\.xml"') {
-            $bcc -replace '"firefox\.VisualElementsManifest\.xml"','"zero.VisualElementsManifest.xml"' | Set-Content $brCommon -NoNewline:$false
-            Write-Output "branding-common manifest adi guncellendi"
-          } else { throw "branding-common manifest satiri bulunamadi" }
+          $bcc = (Get-Content $brCommon -Raw) -replace "`r`n","`n"
+          $bcc = $bcc -replace '"firefox\.VisualElementsManifest\.xml"','"zero.VisualElementsManifest.xml"'
+          $t1 = '"zero.VisualElementsManifest.xml",' + "`n" + '            "private_browsing.VisualElementsManifest.xml"'
+          $t2 = '"private_browsing.VisualElementsManifest.xml",' + "`n" + '            "zero.VisualElementsManifest.xml"'
+          if ($bcc -match [regex]::Escape($t1)) {
+            $bcc = $bcc -replace [regex]::Escape($t1), $t2
+            $bcc | Set-Content $brCommon -NoNewline:$false
+            Write-Output "branding-common manifest adi+sirasi guncellendi"
+          } else { throw "manifest sira duzeni bulunamadi" }
           $brMb = Join-Path $dst 'moz.build'
           if ((Test-Path $brMb) -and ((Get-Content $brMb -Raw) -match 'firefox\.VisualElementsManifest\.xml')) {
             (Get-Content $brMb -Raw) -replace 'firefox\.VisualElementsManifest\.xml','zero.VisualElementsManifest.xml' | Set-Content $brMb -NoNewline:$false
