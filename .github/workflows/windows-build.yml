@@ -332,8 +332,13 @@ jobs:
           # chrome_url_overrides.newtab'i garantiler (about:newtab = ZERO)
           $xpiDir = "$($fw.FullName)/distribution/extensions"
           New-Item -ItemType Directory -Force $xpiDir | Out-Null
-          Compress-Archive -Path "browser/extensions/zero-newtab/extension/*" -DestinationPath "$xpiDir/zero-newtab@example.com.xpi" -Force
-          if (-not (Test-Path "$xpiDir/zero-newtab@example.com.xpi")) { throw "xpi yazilamadi" }
+          $xpiZip = "$xpiDir/zero-newtab@example.com.zip"
+          $xpiFile = "$xpiDir/zero-newtab@example.com.xpi"
+          if (Test-Path $xpiZip) { Remove-Item $xpiZip -Force }
+          if (Test-Path $xpiFile) { Remove-Item $xpiFile -Force }
+          Compress-Archive -Path "browser/extensions/zero-newtab/extension/*" -DestinationPath $xpiZip -Force
+          Rename-Item -LiteralPath $xpiZip -NewName "zero-newtab@example.com.xpi"
+          if (-not (Test-Path $xpiFile)) { throw "xpi yazilamadi" }
           Write-Output "xpi OK"
           # Varsayilan profile siyah tema: her yeni ZERO profiliyle gelir
           $profChrome = "$($fw.FullName)/browser/defaults/profile/chrome"
