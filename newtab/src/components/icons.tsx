@@ -41,6 +41,9 @@ export const IconDots = ({ size = 16, className }: P) => (
     <circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" />
   </svg>
 );
+export const IconMenu = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+);
 export const IconSearch = ({ size = 18, className }: P) => (
   <svg {...base(size)} className={className}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
 );

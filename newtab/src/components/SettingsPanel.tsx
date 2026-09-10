@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import type { TabsPosition, TabsWidth, ZeroSettings } from '../settings/schema';
+import { SEARCH_ENGINES, type SearchEngine, type TabsPosition, type TabsWidth, type ZeroSettings } from '../settings/schema';
 
-// ZERO ayar paneli — sekme konumu/genişliği/hover buradan değişir,
-// useZeroSettings üzerinden IndexedDB+localStorage'a yazılır, reload'da korunur.
-// Toolbar'daki ••• düğmesi 'zero:open-settings' olayıyla paneli açar.
+// ZERO ayar paneli — sekme konumu/genişliği/hover + aktif modun arama motoru
+// buradan değişir, useZeroSettings üzerinden IndexedDB+localStorage'a yazılır,
+// reload'da korunur. Toolbar'daki ••• düğmesi 'zero:open-settings' olayıyla açar.
 
 export default function SettingsPanel({
   settings,
   onTabs,
+  onEngine,
 }: {
   settings: ZeroSettings;
   onTabs: (patch: Partial<Pick<ZeroSettings, 'tabsPosition' | 'tabsWidth' | 'hoverExpand'>>) => void;
+  onEngine: (engine: SearchEngine) => void;
 }) {
   const seg = (active: boolean) =>
     `rounded-full border px-3 py-1 text-[12px] ${active ? 'border-[#E30613] text-white' : 'border-[#2A2A2A] text-[#777] hover:text-white'}`;
@@ -71,6 +73,20 @@ export default function SettingsPanel({
           >
             {settings.hoverExpand ? 'Açık' : 'Kapalı'}
           </button>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[12px] text-[#888]">Arama motoru (bu mod)</span>
+          <div className="flex gap-1.5" role="group" aria-label="Arama motoru">
+            {(Object.keys(SEARCH_ENGINES) as SearchEngine[]).map((e) => (
+              <button
+                key={e}
+                onClick={() => onEngine(e)}
+                className={seg(settings.perMode[settings.activeModeId]?.searchEngine === e)}
+              >
+                {e === 'DuckDuckGo' ? 'DuckDuckGo' : e}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </details>

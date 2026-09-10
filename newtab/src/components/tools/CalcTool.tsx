@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { sGet } from '../../lib/safeStorage';
 
 // Hesap Merkezi — klasik dört işlem + yüzde + KDV tek girişte.
 // "200+10%" → 220 · "100+KDV" → 120 (oran seçilebilir) · "120-KDV" → KDV hariç tutar.
@@ -17,7 +18,7 @@ function loadHist(): string[] {
 }
 
 function loadRate(): number {
-  const r = Number(localStorage.getItem(RATE_KEY) ?? '20');
+  const r = Number(sGet(RATE_KEY) ?? '20');
   return [1, 10, 20].includes(r) ? r : 20;
 }
 

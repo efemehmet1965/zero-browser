@@ -30,6 +30,7 @@ export default function VerticalTabs({
   tabs,
   width,
   hoverExpand,
+  hoverPreview = true,
   onClose,
   onActivate,
 }: {
@@ -37,6 +38,7 @@ export default function VerticalTabs({
   tabs: VTab[];
   width: TabsWidth;
   hoverExpand: boolean;
+  hoverPreview?: boolean;
   onClose?: (id: string) => void;
   onActivate?: (id: string) => void;
 }) {
@@ -76,8 +78,8 @@ export default function VerticalTabs({
             aria-selected={!!t.active}
             aria-label={t.title}
             title={t.url}
-            onMouseEnter={() => hoverExpand && !wide && setHoverId(t.id)}
-            onFocus={() => hoverExpand && !wide && setHoverId(t.id)}
+            onMouseEnter={() => hoverExpand && hoverPreview && !wide && setHoverId(t.id)}
+            onFocus={() => hoverExpand && hoverPreview && !wide && setHoverId(t.id)}
             onClick={() => onActivate?.(t.id)}
             onContextMenu={(e) => {
               e.preventDefault();
@@ -158,8 +160,8 @@ export default function VerticalTabs({
         </div>
       ))}
 
-      {/* Hover önizleme kartı (dar mod) */}
-      {hoverExpand && !wide && hovered && menuId === null && (
+      {/* Hover önizleme kartı (dar mod; mod ayarı kapatabilir) */}
+      {hoverExpand && hoverPreview && !wide && hovered && menuId === null && (
         <div className="pointer-events-none absolute left-full top-2 z-40 ml-2 w-52 rounded-xl border border-[#2A2A2A] bg-[#141414] p-3 shadow-2xl">
           <p className="truncate text-[13px] font-semibold text-white">{hovered.title}</p>
           <p className="mt-0.5 truncate font-mono text-[11px] text-[#888]">{hovered.url}</p>

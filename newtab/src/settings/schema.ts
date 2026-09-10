@@ -7,10 +7,17 @@ import type { ModeId } from '../types';
 export type TabsPosition = 'left' | 'right';
 export type TabsWidth = 'narrow' | 'wide';
 
+export const SEARCH_ENGINES = {
+  DuckDuckGo: 'https://duckduckgo.com/?q=',
+  Google: 'https://www.google.com/search?q=',
+  Bing: 'https://www.bing.com/search?q=',
+} as const;
+export type SearchEngine = keyof typeof SEARCH_ENGINES;
+
 export interface PerModeSettings {
   accent: string;
   pinnedTools: string[];
-  searchEngine: 'DuckDuckGo' | 'Google' | 'Bing';
+  searchEngine: SearchEngine;
   hoverPreview: boolean;
 }
 

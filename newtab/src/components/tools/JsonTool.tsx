@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { copyText } from './copy';
-import { onSend } from './send';
+import { onSend, takePending } from './send';
 
 // JSON Pro — dogrula + guzel yazdir + minify + hata satiri + JSONPath + curl.
 // Tamami istemcide. Temel UI (JSON girisi / Formatla / Hata:) korunur.
@@ -127,12 +127,17 @@ export default function JsonTool() {
   const [received, setReceived] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => onSend('json', (v) => {
-    setSrc(v);
-    setErr(null);
-    setReceived(true);
-    setTimeout(() => setReceived(false), 2000);
-  }), []);
+  useEffect(() => {
+    const apply = (v: string) => {
+      setSrc(v);
+      setErr(null);
+      setReceived(true);
+      setTimeout(() => setReceived(false), 2000);
+    };
+    const first = takePending('json');
+    if (first !== null) apply(first);
+    return onSend('json', apply);
+  }, []);
 
   const run = (fn: (v: unknown) => string) => {
     try {

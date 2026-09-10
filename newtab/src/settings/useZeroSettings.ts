@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useState } from "react";
 import { loadSettings, saveSettings } from "../lib/db";
-import { defaultSettings, type ZeroSettings } from "./schema";
+import { defaultSettings, type SearchEngine, type ZeroSettings } from "./schema";
 
 // Ayar hook — state v2'den bağımsız. İlk yükte IDB/localStorage/v2-göç sırasıyla okur.
 export function useZeroSettings() {
@@ -39,5 +39,12 @@ export function useZeroSettings() {
     setSettings((s) => ({ ...s, ...patch }));
   }, []);
 
-  return { settings, ready, setSettings, setMode, setTabs };
+  const setEngine = useCallback((engine: SearchEngine) => {
+    setSettings((s) => ({
+      ...s,
+      perMode: { ...s.perMode, [s.activeModeId]: { ...s.perMode[s.activeModeId], searchEngine: engine } },
+    }));
+  }, []);
+
+  return { settings, ready, setSettings, setMode, setTabs, setEngine };
 }

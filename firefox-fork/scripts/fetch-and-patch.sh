@@ -47,7 +47,7 @@ fi
 SA="browser/extensions/zero-newtab"
 rm -rf "$SA"
 mkdir -p "$SA/extension"
-cp "$FORKDIR/../extension/manifest.json" "$FORKDIR/../extension/background.js" "$FORKDIR/../extension/newtab-override.js" "$SA/extension/"
+cp "$FORKDIR/../extension/manifest.json" "$FORKDIR/../extension/background.js" "$SA/extension/"
 cp -r "$FORKDIR/../newtab/dist" "$SA/extension/dist"
 cp "$FORKDIR/system-addon/zero-newtab/moz.build" "$FORKDIR/system-addon/zero-newtab/jar.mn" "$SA/"
 grep -q '"zero-newtab"' browser/extensions/moz.build || \

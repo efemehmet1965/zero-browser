@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { copyText } from './copy';
-import { onSend } from './send';
+import { onSend, takePending } from './send';
 
 // Regex Pro — desen + bayrak + ornek metin -> eslesmeler ve sayi.
 // + Değiştirme önizleme, grup listesi, hazır desen kütüphanesi, Türkçe açıklama.
@@ -60,17 +60,22 @@ export default function RegexTool() {
   const [replaceCopied, setReplaceCopied] = useState(false);
   const [received, setReceived] = useState(false);
 
-  useEffect(() => onSend('regex', (v) => {
-    const slash = parseSlashForm(v);
-    if (slash) {
-      setPattern(slash.pattern);
-      setFlags(slash.flags || 'g');
-    } else {
-      setText(v);
-    }
-    setReceived(true);
-    setTimeout(() => setReceived(false), 2000);
-  }), []);
+  useEffect(() => {
+    const apply = (v: string) => {
+      const slash = parseSlashForm(v);
+      if (slash) {
+        setPattern(slash.pattern);
+        setFlags(slash.flags || 'g');
+      } else {
+        setText(v);
+      }
+      setReceived(true);
+      setTimeout(() => setReceived(false), 2000);
+    };
+    const first = takePending('regex');
+    if (first !== null) apply(first);
+    return onSend('regex', apply);
+  }, []);
 
   const res = useMemo(() => {
     try {

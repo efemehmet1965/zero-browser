@@ -91,15 +91,8 @@ jobs:
           }
           hg --cwd firefox-esr id -i
 
-      - name: Govde yamalari (XUL/jar)
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $py = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $py) { throw "govde yamasi icin python bulunamadi" }
-          & $py.FullName "$env:GITHUB_WORKSPACE/zero/firefox-fork/scripts/apply-chrome-patches.py" "$env:GITHUB_WORKSPACE"
-          if ($LASTEXITCODE -ne 0) { throw "govde yamalari patladi" }
-          Write-Output "govde yamalari OK"
-
+      # NOT: govde yamalari newtab/dist ister (bake adimi) — Node/newtab derleme
+      # asagida ONCE kosar, govde yamalari ondan sonra (branding oncesi).
       - name: Node kur (npm cache)
         uses: actions/setup-node@v4
         with:
@@ -118,7 +111,7 @@ jobs:
           # System addon: derleme icine gomulur (dagitim klasoru zamanlama sorunlarini bitirir)
           $sa = 'firefox-esr/browser/extensions/zero-newtab/extension'
           New-Item -ItemType Directory -Force $sa | Out-Null
-          Copy-Item zero/extension/manifest.json,zero/extension/background.js,zero/extension/newtab-override.js $sa -Force
+          Copy-Item zero/extension/manifest.json,zero/extension/background.js $sa -Force
           Copy-Item -Recurse zero/newtab/dist "$sa/dist" -Force
           Copy-Item zero/firefox-fork/system-addon/zero-newtab/moz.build,zero/firefox-fork/system-addon/zero-newtab/jar.mn firefox-esr/browser/extensions/zero-newtab/ -Force
           $mb = 'firefox-esr/browser/extensions/moz.build'
@@ -137,6 +130,16 @@ jobs:
           if ((Get-Content $bm -Raw) -notmatch 'DIRS \+= \["zero"\]') { Add-Content $bm 'DIRS += ["zero"]' }
           if (-not (Test-Path firefox-esr/browser/zero/ZeroMode.sys.mjs)) { throw "platform modulu kopyalanamadi" }
           if (-not (Test-Path firefox-esr/browser/zero/ZeroChrome.sys.mjs)) { throw "ZeroChrome kopyalanamadi" }
+
+      - name: Govde yamalari (XUL/jar + newtab bake + redirector)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $py = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $py) { throw "govde yamasi icin python bulunamadi" }
+          if (-not (Test-Path zero/newtab/dist/index.html)) { throw "dist yok: newtab derleme once kosmali" }
+          & $py.FullName "$env:GITHUB_WORKSPACE/zero/firefox-fork/scripts/apply-chrome-patches.py" "$env:GITHUB_WORKSPACE"
+          if ($LASTEXITCODE -ne 0) { throw "govde yamalari patladi" }
+          Write-Output "govde yamalari OK"
 
       - name: ZERO branding (PowerShell)
         run: |
@@ -263,6 +266,37 @@ jobs:
           Get-Content "$env:RUNNER_TEMP/zero-build.log" -Tail 60 | Out-String | Write-Output
           if ($code -ne 0) { throw "derleme patladi (exit $code) - tam log artifact'ta (zero-build-log)" }
 
+      - name: Smoke (about:newtab = ZERO?)
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $exe = $null
+          foreach ($c in @('firefox-esr/obj-zero/dist/bin/zero.exe','firefox-esr/obj-zero/dist/bin/firefox.exe')) {
+            if (Test-Path $c) { $exe = $c; break }
+          }
+          if (-not $exe) { Write-Output 'SMOKE: exe yok, atlaniyor'; exit 0 }
+          $prof = "$env:RUNNER_TEMP/zero-smoke-profile"
+          Remove-Item -Recurse -Force $prof -ErrorAction SilentlyContinue
+          $shot = "$env:RUNNER_TEMP/zero-newtab-smoke.png"
+          if (Test-Path $shot) { Remove-Item $shot -Force }
+          Write-Output "smoke exe: $exe"
+          & $exe -headless -no-remote -profile $prof --window-size=1280,720 --screenshot $shot 'about:newtab' 2>&1 | Select-Object -First 5 | Out-String | Write-Output
+          if (-not (Test-Path $shot)) { Write-Output 'SMOKE UYARI: ekran goruntusu uretilemedi'; exit 0 }
+          $py = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($py) {
+            & $py.FullName -c "from PIL import Image; im=Image.open(r'$shot').convert('L'); px=list(im.getdata()); m=sum(px)/len(px); print('SMOKE parlaklik: %.1f' % m); print('SMOKE: ZERO (koyu) PASS' if m < 30 else 'SMOKE UYARI: sayfa aydinlik, stock olabilir')"
+          } else { Write-Output 'SMOKE: python yok, gorsel artifact ile incelenir' }
+          Write-Output 'smoke tamam (uyari modu)'
+
+      - name: Yukle (smoke)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zero-smoke
+          path: ${{ runner.temp }}/zero-newtab-smoke.png
+          if-no-files-found: warn
+
       - name: Distribution ekle + yukle
         run: |
           $ErrorActionPreference = 'Stop'
@@ -330,14 +364,16 @@ jobs:
           '@
           # Eklenti XPI: system addon yedegi — dagitim klasorunden otomatik kurulur,
           # chrome_url_overrides.newtab'i garantiler (about:newtab = ZERO)
+          # NOT: Compress-Archive zip girdilerini ters slash ile yazar, Firefox
+          # override sayfasini bulamaz (stock newtab'a duser). make-xpi.py kullan.
           $xpiDir = "$($fw.FullName)/distribution/extensions"
           New-Item -ItemType Directory -Force $xpiDir | Out-Null
-          $xpiZip = "$xpiDir/zero-newtab@example.com.zip"
           $xpiFile = "$xpiDir/zero-newtab@example.com.xpi"
-          if (Test-Path $xpiZip) { Remove-Item $xpiZip -Force }
           if (Test-Path $xpiFile) { Remove-Item $xpiFile -Force }
-          Compress-Archive -Path "browser/extensions/zero-newtab/extension/*" -DestinationPath $xpiZip -Force
-          Rename-Item -LiteralPath $xpiZip -NewName "zero-newtab@example.com.xpi"
+          $pyExe = Get-ChildItem C:\hostedtoolcache\windows\Python\3.12*\x64\python.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $pyExe) { throw "xpi icin python bulunamadi" }
+          & $pyExe.FullName "$env:GITHUB_WORKSPACE/zero/firefox-fork/scripts/make-xpi.py" "browser/extensions/zero-newtab/extension" "$xpiFile"
+          if ($LASTEXITCODE -ne 0) { throw "xpi yazilamadi" }
           if (-not (Test-Path $xpiFile)) { throw "xpi yazilamadi" }
           Write-Output "xpi OK"
           # Varsayilan profile siyah tema: her yeni ZERO profiliyle gelir

@@ -13,8 +13,8 @@ const SEED = {
       color: '#E30613',
       active: true,
       tabs: [
-        { id: 't1', title: 'New Tab', url: 'zero://newtab' },
-        { id: 't2', title: 'Work', url: 'zero://workspace/work' },
+        { id: 't1', title: 'New Tab', url: 'about:newtab' },
+        { id: 't2', title: 'Work', url: 'about:blank' },
       ],
     },
     { id: 'ws-marketing', name: 'Marketing Plan', color: '#8A8A8A', tabs: [] },

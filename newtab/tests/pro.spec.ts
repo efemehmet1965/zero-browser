@@ -1,19 +1,38 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 // ZERO Pro araç testleri: JSON Pro + Regex Pro + araçlar-arası gönder akışı.
 // Mevcut zero.spec.ts'e dokunmaz; Developer modunda çalışır.
 
 let currentErrors: string[] = [];
 
+async function enterMode(page: Page, mode: string) {
+  await page.getByTestId(`mode-card-${mode}`).click();
+}
+
+async function openTool(page: Page, id: string) {
+  await page.getByTestId(`tool-card-${id}`).click();
+}
+
+async function backToTools(page: Page) {
+  await page.getByTestId('tool-back').click();
+}
+
 test.beforeEach(async ({ page }) => {
   currentErrors = [];
-  page.on('pageerror', (e) => currentErrors.push(e.message));
+  const ours = () => {
+    try {
+      return page.url().startsWith('http://localhost:4173');
+    } catch {
+      return false;
+    }
+  };
+  page.on('pageerror', (e) => { if (ours()) currentErrors.push(e.message); });
   page.on('console', (m) => {
-    if (m.type() === 'error') currentErrors.push(m.text());
+    if (m.type() === 'error' && ours()) currentErrors.push(m.text());
   });
   await page.goto('/');
   await expect(page.getByText('Just the web.', { exact: true })).toBeVisible();
-  await page.getByRole('tab', { name: 'Developer' }).click();
+  await enterMode(page, 'developer');
 });
 
 test.afterEach(async () => {
@@ -21,6 +40,7 @@ test.afterEach(async () => {
 });
 
 test('JSON hata satır/sütun gösterir', async ({ page }) => {
+  await openTool(page, 'json');
   await page.getByLabel('JSON girisi').fill('{bozuk');
   await page.getByRole('button', { name: 'Formatla' }).click();
   await expect(page.getByText(/Hata:/)).toBeVisible();
@@ -28,6 +48,7 @@ test('JSON hata satır/sütun gösterir', async ({ page }) => {
 });
 
 test('JSONPath sorgusu çalışır', async ({ page }) => {
+  await openTool(page, 'json');
   await page.getByLabel('JSON girisi').fill('{"data":[{"email":"a@x.com"}]}');
   await page.getByRole('button', { name: 'Formatla' }).click();
   await page.getByLabel('JSONPath sorgusu').fill('$.data[0].email');
@@ -35,42 +56,51 @@ test('JSONPath sorgusu çalışır', async ({ page }) => {
 });
 
 test('curl body ayıklanır', async ({ page }) => {
+  await openTool(page, 'json');
   await page.getByLabel('JSON girisi').fill(`curl https://api.x.com -d '{"a":1}'`);
   await page.getByRole('button', { name: /curl body/ }).click();
   await expect(page.getByLabel('JSON girisi')).toHaveValue(/"a": 1/);
 });
 
 test('Regex değiştirme önizlemesi', async ({ page }) => {
+  await openTool(page, 'regex');
   await page.getByRole('tab', { name: 'Değiştir' }).click();
   await page.getByLabel('Değiştirme metni').fill('[$&]');
   await expect(page.getByTestId('regex-replace')).toContainText('[123]');
 });
 
 test('Regex hazır desen + açıklama', async ({ page }) => {
+  await openTool(page, 'regex');
   await page.getByLabel('Hazır desen').selectOption({ index: 1 });
   await expect(page.getByLabel('Regex deseni')).toHaveValue(/\\w/);
   await expect(page.getByTestId('regex-explain')).toContainText('Açıklama:');
 });
 
 test('JWT payload JSON araca gönderilir', async ({ page }) => {
+  await openTool(page, 'jwt');
   await page.getByRole('button', { name: /JSON'a gönder/ }).click();
+  // Gönderim JSON aracına geçirir (aynı modda otomatik geçiş).
+  await expect(page.getByTestId('tool-detail')).toHaveAttribute('data-tool', 'json');
   await expect(page.getByLabel('JSON girisi')).toHaveValue(/"sub"/);
 });
 
 test('Tezgah Base64 çözer', async ({ page }) => {
   await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await openTool(page, 'tezgah');
   await page.getByRole('button', { name: '▶ Base64 çöz' }).click();
   await expect(page.getByTestId('tezgah-output')).toContainText('hello');
 });
 
 test('Tezgah payload encode zinciri', async ({ page }) => {
   await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await openTool(page, 'tezgah');
   await page.getByRole('button', { name: '▶ Payload encode' }).click();
   await expect(page.getByTestId('tezgah-output')).toContainText('%3Cscript%3E');
 });
 
 test('Tezgah hatalı adımda durur', async ({ page }) => {
   await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await openTool(page, 'tezgah');
   await page.getByRole('button', { name: '▶ Base64 çöz' }).click();
   await page.getByLabel('Tezgah girdisi').fill('!!!');
   await expect(page.getByTestId('tezgah-error')).toContainText('Adım 1');
@@ -78,12 +108,14 @@ test('Tezgah hatalı adımda durur', async ({ page }) => {
 
 test('Tezgah logdan e-posta çıkarır', async ({ page }) => {
   await page.getByRole('tab', { name: 'Cybersecurity' }).click();
+  await openTool(page, 'tezgah');
   await page.getByRole('button', { name: '▶ E-posta çıkar' }).click();
   await expect(page.getByTestId('tezgah-output')).toContainText('ali@ornek.com');
 });
 
 test('Link Süzgeci izleyici söker + temiz verir', async ({ page }) => {
   await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await openTool(page, 'linkfilter');
   await page.getByLabel('Süzülecek bağlantı').fill('https://x.com/post?utm_source=t&fbclid=ABC&id=5');
   await page.getByRole('button', { name: 'Süz' }).click();
   await expect(page.getByTestId('sieve-clean')).toContainText('id=5');
@@ -93,6 +125,7 @@ test('Link Süzgeci izleyici söker + temiz verir', async ({ page }) => {
 
 test('Link Süzgeci IP + yönlendirmeyi yakalar', async ({ page }) => {
   await page.getByRole('tab', { name: 'Gizlilik' }).click();
+  await openTool(page, 'linkfilter');
   await page.getByLabel('Süzülecek bağlantı').fill('http://192.168.1.1/login?next=x');
   await page.getByRole('button', { name: 'Süz' }).click();
   await expect(page.getByTestId('sieve-verdict')).toContainText(/Şüpheli|Riskli/);
@@ -101,6 +134,7 @@ test('Link Süzgeci IP + yönlendirmeyi yakalar', async ({ page }) => {
 
 test('Hesap yüzde ve KDV çözer', async ({ page }) => {
   await page.getByRole('tab', { name: 'Standart' }).click();
+  await openTool(page, 'calc');
   await page.getByLabel('Hesap ifadesi').fill('200+10%');
   await expect(page.getByTestId('calc-result')).toContainText('= 220');
   await page.getByLabel('Hesap ifadesi').fill('100+KDV');
@@ -111,22 +145,32 @@ test('Hesap yüzde ve KDV çözer', async ({ page }) => {
 
 test('Hesap geçmişi kalıcıdır', async ({ page }) => {
   await page.getByRole('tab', { name: 'Standart' }).click();
+  await openTool(page, 'calc');
   await page.getByLabel('Hesap ifadesi').fill('7*6');
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('calc-result')).toContainText('= 42');
   await page.reload();
+  await openTool(page, 'calc');
   await expect(page.getByText('7*6 = 42')).toBeVisible();
 });
 
 test('Gün Planı maddeleri canlı sayar', async ({ page }) => {
   await page.getByRole('tab', { name: 'Standart' }).click();
+  await openTool(page, 'gunplani');
   await expect(page.getByTestId('gunplani-ozet')).toContainText('0 açık madde');
+  await backToTools(page);
+  await openTool(page, 'todo');
   await page.getByLabel('Yeni yapilacak madde').fill('süt al');
   await page.keyboard.press('Enter');
+  await expect(page.getByTestId('todo-count')).toContainText('1 açık');
+  await backToTools(page);
+  await openTool(page, 'gunplani');
   await expect(page.getByTestId('gunplani-ozet')).toContainText('1 açık madde');
   await expect(page.getByTestId('gunplani-ozet')).toContainText(/odak/);
   await page.getByLabel('Gün planı hızlı madde').fill('ekmek al');
   await page.keyboard.press('Enter');
+  await backToTools(page);
+  await openTool(page, 'todo');
   await expect(page.getByTestId('todo-count')).toContainText('2 açık');
 });
 

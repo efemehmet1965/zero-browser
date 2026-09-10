@@ -11,13 +11,24 @@ Ne yapar (firefox-esr agaci icinde):
      - </head> oncesine zero-chrome.js <script> ekler
   3. browser/base/jar.mn: son `content/browser/...` satirindan sonra
      2 girdi ekler (browser.jar blogu icinde kalir)
+  4. ZERO newtab bake: newtab/dist/* ->
+     firefox-esr/browser/base/content/zero-newtab/* + jar.mn girdileri
+     (chrome://browser/content/zero-newtab/index.html olarak paketlenir)
+  5. Redirector yamasi: AboutNewTabRedirector.sys.mjs base `defaultURL`
+     ZERO sayfasina doner. Boylece yazilan URL, homepage, first-run ve
+     yeni sekmelerin tamami eklenti override yarisina girmeden ZERO acar.
+     (Eklenti override'i yedek olarak kalir; ayni UI, iki URL.)
 
 Kullanim: apply-chrome-patches.py "<workspace>"
 Idempotent: ekler zaten varsa tekrar eklemez.
 Anchor bulunamazsa aday satirlari doker ve exit 1 (fail-fast).
+
+ONEMLI: adim 4 newtab/dist ister. Workflow'da Node kur + newtab derleme
+BU betikten ONCE kosmalidir.
 """
 import pathlib
 import re
+import shutil
 import sys
 
 WS = pathlib.Path(sys.argv[1])
@@ -33,6 +44,15 @@ JS_TAG = '  <script src="chrome://browser/content/zero-chrome.js"></script>'
 JAR_LINES = [
     "        content/browser/zero-chrome.css               (content/zero-chrome.css)",
     "        content/browser/zero-chrome.js                (content/zero-chrome.js)",
+]
+
+ZERO_NEWTAB_URL = "chrome://browser/content/zero-newtab/index.html"
+ZERO_NEWTAB_DIR = CONTENT / "zero-newtab"
+DIST = ZERO / "newtab" / "dist"
+
+REDIRECTOR_CANDIDATES = [
+    ESR / "browser" / "components" / "newtab" / "lib" / "AboutNewTabRedirector.sys.mjs",
+    ESR / "browser" / "extensions" / "newtab" / "lib" / "AboutNewTabRedirector.sys.mjs",
 ]
 
 
@@ -87,7 +107,7 @@ def main():
         print("xhtml: js zaten var")
     XHTML.write_text(x, encoding="utf-8")
 
-    # 3. browser/base/jar.mn
+    # 3. browser/base/jar.mn (zero-chrome girdileri)
     if not JAR.is_file():
         fail(f"jar.mn yok: {JAR}")
     j = JAR.read_text(encoding="utf-8")
@@ -102,6 +122,70 @@ def main():
     else:
         print("jar.mn: girdiler zaten var")
     JAR.write_text(j, encoding="utf-8")
+
+    # 4. ZERO newtab bake (dist -> content/zero-newtab + jar.mn)
+    if not (DIST / "index.html").is_file():
+        fail(
+            f"newtab dist yok: {DIST}/index.html "
+            "(workflow: newtab derleme BU adimdan once kosmali)"
+        )
+    if ZERO_NEWTAB_DIR.exists():
+        shutil.rmtree(ZERO_NEWTAB_DIR)
+    shutil.copytree(DIST, ZERO_NEWTAB_DIR)
+    baked = sorted(
+        p.relative_to(ZERO_NEWTAB_DIR).as_posix()
+        for p in ZERO_NEWTAB_DIR.rglob("*")
+        if p.is_file()
+    )
+    print(f"baked: {len(baked)} dosya -> content/zero-newtab/")
+    j = JAR.read_text(encoding="utf-8")
+    missing = [r for r in baked if f"content/browser/zero-newtab/{r}" not in j]
+    if missing:
+        anchor = None
+        for m in re.finditer(r"^\s*\*?\s*content/browser/\S+.*$", j, re.M):
+            anchor = m
+        if anchor is None:
+            fail("jar.mn newtab anchor bulunamadi", JAR)
+        add = [
+            f"        content/browser/zero-newtab/{r}               (content/zero-newtab/{r})"
+            for r in missing
+        ]
+        j = j[: anchor.end()] + "\n" + "\n".join(add) + j[anchor.end():]
+        JAR.write_text(j, encoding="utf-8")
+        print(f"jar.mn: {len(add)} newtab girdisi eklendi")
+    else:
+        print("jar.mn: newtab girdileri zaten var")
+
+    # 5. Redirector yamasi: defaultURL -> ZERO sayfasi
+    red = next((p for p in REDIRECTOR_CANDIDATES if p.is_file()), None)
+    if red is None:
+        tried = "\n".join(f"   {p.relative_to(ESR)}" for p in REDIRECTOR_CANDIDATES)
+        fail(f"redirector bulunamadi, denenenler:\n{tried}")
+    t = red.read_text(encoding="utf-8")
+    if ZERO_NEWTAB_URL in t:
+        print("redirector: ZERO default zaten var")
+    else:
+        m_get = re.search(r"get defaultURL\(\) \{", t)
+        if not m_get:
+            cands = [ln for ln in t.splitlines() if "defaultURL" in ln][:10]
+            fail("redirector anchor yok (get defaultURL)", red, cands)
+        m_ret = re.search(r"return \[", t[m_get.end():])
+        if not m_ret:
+            fail("redirector anchor yok (return [)", red)
+        ret_start = m_get.end() + m_ret.start()
+        m_end = re.search(r'\]\.join\(""\);', t[ret_start:])
+        if not m_end:
+            cands = t[ret_start:ret_start + 600].splitlines()[:12]
+            fail("redirector anchor yok (].join)", red, cands)
+        ret_end = ret_start + m_end.end()
+        patched = (
+            "    // ZERO: about:newtab + about:home varsayilani gomulu ZERO sayfasi.\n"
+            "    // (Eklenti override yarisina girmez — her profil, her acilista ZERO.)\n"
+            f'    return "{ZERO_NEWTAB_URL}";'
+        )
+        t = t[:ret_start] + patched + t[ret_end:]
+        red.write_text(t, encoding="utf-8")
+        print(f"redirector: defaultURL yamandi ({red.relative_to(ESR)})")
 
     print("GOVDE YAMALARI OK")
 

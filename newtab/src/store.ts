@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ModeId, Workspace, ZeroState } from './types';
+import { sGet } from './lib/safeStorage';
 
 // ---------------------------------------------------------------------------
 // ZERO persistence layer (v2: mod sistemi).
@@ -29,8 +30,8 @@ export function seedState(): ZeroState {
       color: '#E30613',
       active: true,
       tabs: [
-        { id: uid('t'), title: 'New Tab', url: 'zero://newtab' },
-        { id: uid('t'), title: 'Work', url: 'zero://workspace/work' },
+        { id: uid('t'), title: 'New Tab', url: 'about:newtab' },
+        { id: uid('t'), title: 'Work', url: 'about:blank' },
       ],
     },
     { id: 'ws-marketing', name: 'Marketing Plan', color: '#8A8A8A', tabs: [] },
@@ -101,7 +102,7 @@ export function useZeroState() {
 
   // Seed localStorage on first run so restart restores data.
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) writeLocal(state);
+    if (!sGet(STORAGE_KEY)) writeLocal(state);
     spoofZeroUrl();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

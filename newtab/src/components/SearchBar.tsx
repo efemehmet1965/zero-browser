@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { IconArrowRight, IconSearch } from './icons';
+import { SEARCH_ENGINES, type SearchEngine } from '../settings/schema';
 
-// Privacy search — Enter redirects to DuckDuckGo.
-export default function SearchBar() {
+// Arama — hedef, aktif modun ayarındaki motordur (varsayılan DuckDuckGo).
+export default function SearchBar({ engine = 'DuckDuckGo' }: { engine?: SearchEngine }) {
   const [q, setQ] = useState('');
 
   const go = () => {
     const query = q.trim();
     if (!query) return;
-    window.location.href = `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
+    const base = SEARCH_ENGINES[engine] ?? SEARCH_ENGINES.DuckDuckGo;
+    window.location.href = `${base}${encodeURIComponent(query)}`;
   };
 
   return (
