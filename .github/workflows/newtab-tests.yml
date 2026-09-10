@@ -1,0 +1,46 @@
+name: newtab-tests
+# ZERO newtab hizli kalite kapisi — fork derlemesi gerektirmez.
+# Her push/PR'de: kur + derle + gercek Firefox'ta e2e.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: newtab
+    steps:
+      - name: Kaynak
+        uses: actions/checkout@v4
+
+      - name: Node kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: newtab/package-lock.json
+
+      - name: Bagimlilik + derleme
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Playwright Firefox
+        run: npx playwright install --with-deps firefox
+
+      - name: E2E
+        env:
+          CI: true
+        run: npm run test:e2e
+
+      - name: Rapor (hata ekranlari)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newtab-test-results
+          path: newtab/test-results/
+          if-no-files-found: warn

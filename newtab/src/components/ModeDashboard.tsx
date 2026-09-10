@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { MODES } from '../modes';
 import type { ModeId } from '../types';
+import { ErrorBoundary } from './ErrorBoundary';
 import { TOOLS } from './tools/registry';
 
 // Mod panosu: özet ızgara + tekil araç görünümü (master-detail).
-// Araç seçimi karttan ya da araç menüsünden (`zero:open-tool` olayı) gelir.
+// Araç seçimi karttan, menüden ya da paletten (`zero:open-tool` olayı) gelir.
+// Özet: arama filtresi + sabitleme (ayar sırasıyla önce). Detay hata sınırıyla
+// sarılıdır; patlayan araç tüm sayfayı karartmaz.
 // Alt satırda ilgili about:/harici hızlı bağlantılar (özette).
 
 function go(url: string) {
@@ -80,7 +83,15 @@ function ModeLinks({ mode }: { mode: ModeId }) {
   return null;
 }
 
-export default function ModeDashboard({ mode, pinned = [] }: { mode: ModeId; pinned?: string[] }) {
+export default function ModeDashboard({
+  mode,
+  pinned = [],
+  onTogglePin,
+}: {
+  mode: ModeId;
+  pinned?: string[];
+  onTogglePin?: (id: string) => void;
+}) {
   const blurb = MODES[mode].tagline;
   // Sabitlenenler önce (ayar sırasıyla), kalanlar kayıt sırasıyla.
   const tools = useMemo(() => {
@@ -89,13 +100,15 @@ export default function ModeDashboard({ mode, pinned = [] }: { mode: ModeId; pin
     return [...all].sort((a, b) => (rank.get(a.id) ?? 1e6) - (rank.get(b.id) ?? 1e6));
   }, [mode, pinned]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
-  // Mod değişince özete dön.
+  // Mod değişince özete + temiz filtreye dön.
   useEffect(() => {
     setActiveId(null);
+    setQuery('');
   }, [mode]);
 
-  // Araç menüsü / dış tetikleyici: ilgili aracı tekil görünümde aç.
+  // Araç menüsü / palet / dış tetikleyici: ilgili aracı tekil görünümde aç.
   useEffect(() => {
     const h = (e: Event) => {
       try {
@@ -112,6 +125,15 @@ export default function ModeDashboard({ mode, pinned = [] }: { mode: ModeId; pin
     return () => window.removeEventListener('zero:open-tool', h);
   }, [tools]);
 
+  const needle = query.trim().toLocaleLowerCase();
+  const visible = needle
+    ? tools.filter(
+        (tool) =>
+          tool.label.toLocaleLowerCase().includes(needle) ||
+          tool.desc.toLocaleLowerCase().includes(needle),
+      )
+    : tools;
+
   const active = tools.find((tool) => tool.id === activeId) ?? null;
 
   if (active) {
@@ -126,7 +148,17 @@ export default function ModeDashboard({ mode, pinned = [] }: { mode: ModeId; pin
           >
             ← Tüm araçlar
           </button>
-          <Active />
+          <ErrorBoundary name={`tool:${active.id}`}>
+            <Suspense
+              fallback={
+                <div className="rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] p-5 text-[13px] text-[#777]">
+                  Yükleniyor…
+                </div>
+              }
+            >
+              <Active />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </Shell>
     );
@@ -134,19 +166,50 @@ export default function ModeDashboard({ mode, pinned = [] }: { mode: ModeId; pin
 
   return (
     <Shell blurb={blurb}>
+      <input
+        data-testid="tool-filter"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Araç ara…"
+        aria-label="Araç ara"
+        className="w-full rounded-xl border border-[#1E1E1E] bg-[#0A0A0A] px-4 py-2.5 text-[13px] text-white placeholder-[#555] outline-none focus:border-[#3A3A3A]"
+      />
       <div data-testid="tool-grid" className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        {tools.map((tool) => (
-          <button
-            key={tool.id}
-            data-testid={`tool-card-${tool.id}`}
-            onClick={() => setActiveId(tool.id)}
-            className="rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] p-4 text-left transition hover:border-[#3A3A3A] hover:bg-[#101010]"
-          >
-            <span className="block text-[14px] font-bold text-white">{tool.label}</span>
-            <span className="mt-1 block text-[12px] leading-relaxed text-[#777]">{tool.desc}</span>
-          </button>
-        ))}
+        {visible.map((tool) => {
+          const isPinned = pinned.includes(tool.id);
+          return (
+            <div
+              key={tool.id}
+              className="relative rounded-2xl border border-[#1E1E1E] bg-[#0A0A0A] transition hover:border-[#3A3A3A] hover:bg-[#101010]"
+            >
+              <button
+                data-testid={`tool-card-${tool.id}`}
+                onClick={() => setActiveId(tool.id)}
+                className="block w-full p-4 pr-12 text-left"
+              >
+                <span className="block text-[14px] font-bold text-white">{tool.label}</span>
+                <span className="mt-1 block text-[12px] leading-relaxed text-[#777]">{tool.desc}</span>
+              </button>
+              {onTogglePin && (
+                <button
+                  data-testid={`tool-pin-${tool.id}`}
+                  aria-label={isPinned ? `${tool.label} sabitini kaldır` : `${tool.label} sabitle`}
+                  aria-pressed={isPinned}
+                  onClick={() => onTogglePin(tool.id)}
+                  className={`absolute right-2 top-2 rounded-lg px-2 py-1 text-[12px] ${
+                    isPinned ? 'text-[#E30613]' : 'text-[#555] hover:text-white'
+                  }`}
+                >
+                  {isPinned ? 'Sabitli' : 'Sabitle'}
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
+      {visible.length === 0 && (
+        <p className="py-4 text-center text-[13px] text-[#666]">Sonuç yok.</p>
+      )}
       <ModeLinks mode={mode} />
     </Shell>
   );

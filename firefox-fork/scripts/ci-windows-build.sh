@@ -28,6 +28,18 @@ pref("datareporting.healthreport.uploadEnabled", false);
 pref("app.shield.optoutstudies.enabled", false);
 pref("xpinstall.signatures.required", false);
 pref("ui.systemUsesDarkTheme", 1);
+// ZERO gizlilik durusu: eve telefon acan kanallar kapali.
+// (Guvenlik kapatilmaz: safebrowsing ve guncelleme URL'lerine dokunulmaz.)
+pref("app.normandy.enabled", false);
+pref("browser.crashReports.unsubmittedCheck.enabled", false);
+pref("breakpad.reportURL", "");
+pref("browser.newtabpage.activity-stream.showSponsored", false);
+pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+pref("browser.urlbar.suggest.quicksuggest.sponsored", false);
+pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+pref("browser.discovery.enabled", false);
+pref("datareporting.policy.dataSubmissionEnabled", false);
+pref("network.prefetch-next", false);
 pref("zero.mode.active", "standard");
 pref("zero.tabs.position", "left");
 pref("zero.tabs.width", "narrow");
@@ -40,6 +52,12 @@ RED_FILE=$(find "$ESR/browser" "$ESR/toolkit" -name AboutNewTabRedirector.sys.mj
 test -n "$RED_FILE" || { echo "HATA: redirector dosyasi agacta yok"; exit 1; }
 grep -q "zero-newtab/index.html" "$RED_FILE" || { echo "HATA: redirector ZERO yamasi uygulanmamis ($RED_FILE)"; exit 1; }
 echo "redirector yamasi OK ($RED_FILE)"
+
+echo "== gizlilik prefs (kaynak) =="
+for key in app.normandy.enabled breakpad.reportURL quicksuggest.sponsored browser.discovery.enabled network.prefetch-next; do
+  grep -qF "$key" "$ESR/browser/app/profile/firefox.js" || { echo "HATA: gizlilik pref eksik: $key"; exit 1; }
+done
+echo "gizlilik prefs OK"
 
 echo "== bootstrap + build + package =="
 cd "$ESR"

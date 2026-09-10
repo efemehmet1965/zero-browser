@@ -396,7 +396,13 @@ jobs:
             try {
               var Cc = Components.classes;
               var Ci = Components.interfaces;
-              Components.utils.import("resource://gre/modules/Services.jsm");
+              var Services = null;
+              try { Services = ChromeUtils.importESModule("resource://gre/modules/Services.sys.mjs").Services; }
+              catch (e1) {
+                try { Components.utils.import("resource://gre/modules/Services.jsm"); Services = this.Services || Services; }
+                catch (e2) {}
+              }
+              if (!Services) return;
               var profChrome = Services.dirsvc.get("ProfD", Ci.nsIFile);
               profChrome.append("chrome");
               if (!profChrome.exists()) profChrome.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);

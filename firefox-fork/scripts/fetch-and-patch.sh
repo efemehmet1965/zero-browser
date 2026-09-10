@@ -69,6 +69,16 @@ for pref in \
   'pref("datareporting.healthreport.uploadEnabled", false);' \
   'pref("app.shield.optoutstudies.enabled", false);' \
   'pref("xpinstall.signatures.required", false);' \
+  'pref("app.normandy.enabled", false);' \
+  'pref("browser.crashReports.unsubmittedCheck.enabled", false);' \
+  'pref("breakpad.reportURL", "");' \
+  'pref("browser.newtabpage.activity-stream.showSponsored", false);' \
+  'pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);' \
+  'pref("browser.urlbar.suggest.quicksuggest.sponsored", false);' \
+  'pref("extensions.htmlaboutaddons.recommendations.enabled", false);' \
+  'pref("browser.discovery.enabled", false);' \
+  'pref("datareporting.policy.dataSubmissionEnabled", false);' \
+  'pref("network.prefetch-next", false);' \
   'pref("zero.mode.active", "standard");' \
   'pref("zero.tabs.position", "left");' \
   'pref("zero.tabs.width", "narrow");' \

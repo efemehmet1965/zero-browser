@@ -392,8 +392,56 @@ test('standart 15 arac', async ({ page }) => {
   await expect(page.getByTestId('datediff-result')).toContainText('10 gün');
 });
 
-test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {
-  await page.getByPlaceholder('Search the web privately').fill('zero browser test');
+test('komut paleti arac acar + mod degistirir', async ({ page }) => {
+  await page.keyboard.press('Alt+k');
+  await expect(page.getByTestId('command-palette')).toBeVisible();
+  await page.getByTestId('palette-input').fill('hesap');
+  await page.keyboard.press('Enter');
+  await expect(page.getByTestId('tool-detail')).toHaveAttribute('data-tool', 'calc');
+  await expect(page.getByLabel('Hesap ifadesi')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Alt+k');
+  await page.getByTestId('palette-input').fill('cyber');
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('VirusTotal', { exact: true })).toBeVisible();
+});
+
+test('arac filtresi listeyi daraltir', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Developer' }).click();
+  await page.getByTestId('tool-filter').fill('json');
+  await expect(page.getByTestId('tool-card-json')).toBeVisible();
+  await expect(page.getByTestId('tool-card-regex')).toHaveCount(0);
+  await page.getByTestId('tool-filter').fill('');
+  await expect(page.getByTestId('tool-card-regex')).toBeVisible();
+});
+
+test('sabitlenen arac one cikar + hatirlanir', async ({ page }) => {
+  await page.getByTestId('tool-pin-loan').click();
+  await expect(page.getByTestId('tool-pin-loan')).toHaveAttribute('aria-pressed', 'true');
+  const ids = await page
+    .getByTestId('tool-grid')
+    .locator('[data-testid^="tool-card-"]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-testid')));
+  expect(ids.indexOf('tool-card-loan')).toBeLessThan(ids.indexOf('tool-card-gunplani'));
+  await page.reload();
+  await expect(page.getByTestId('tool-pin-loan')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('yer imi dosyasi kisayol aktarir', async ({ page }) => {
+  const html =
+    '<!DOCTYPE NETSCAPE-Bookmark-file><DL><DT><A HREF="https://ornek.com/a">Ornek A</A>' +
+    '<DT><A HREF="https://ornek.com/b">Ornek B</A></DL>';
+  await page.getByLabel('Yer imi dosyası seç').setInputFiles({
+    name: 'bookmarks.html',
+    mimeType: 'text/html',
+    buffer: Buffer.from(html),
+  });
+  await expect(page.getByText('Ornek A', { exact: true })).toBeVisible();
+  await expect(page.getByText('Ornek B', { exact: true })).toBeVisible();
+  await expect(page.getByText('2 aktarıldı ✓')).toBeVisible();
+});
+
+test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {  await page.getByPlaceholder('Search the web privately').fill('zero browser test');
   await page.keyboard.press('Enter');
   await page.waitForURL(/duckduckgo\.com/, { timeout: 20000 });
   expect(page.url()).toContain('q=zero+browser+test');

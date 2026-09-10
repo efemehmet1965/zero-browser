@@ -46,5 +46,17 @@ export function useZeroSettings() {
     }));
   }, []);
 
-  return { settings, ready, setSettings, setMode, setTabs, setEngine };
+  const togglePin = useCallback((id: string) => {
+    setSettings((s) => {
+      const cur = s.perMode[s.activeModeId];
+      const has = cur.pinnedTools.includes(id);
+      const pinnedTools = (has
+        ? cur.pinnedTools.filter((x) => x !== id)
+        : [...cur.pinnedTools, id]
+      ).slice(0, 20);
+      return { ...s, perMode: { ...s.perMode, [s.activeModeId]: { ...cur, pinnedTools } } };
+    });
+  }, []);
+
+  return { settings, ready, setSettings, setMode, setTabs, setEngine, togglePin };
 }

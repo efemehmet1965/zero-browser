@@ -54,8 +54,11 @@
   display: none !important;
 }
 
-/* === Yatay sekme seridi YOK (sekmeler dikey seritte) === */
-#TabsToolbar { display: none !important; }
+/* === Yatay sekme seridi: HER ZAMAN gorunur ===
+ * Not: once tamamen gizliydi; ama dikey ray yalnizca newtab sayfasinda
+ * oldugu icin sitelerde sekme kalmiyor + baslik cubugu yuksekligini
+ * kaybedip pencere dugmeleri (kapat/buyut/kucult) gomme gomuluyordu.
+ * Yerel dikey sekmeler govdeye girene kadar serit acik kalir. */
 #titlebar { appearance: none !important; background: #000 !important; }
 
 /* === Tum toolbar dugmeleri === */

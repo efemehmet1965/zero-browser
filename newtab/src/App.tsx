@@ -1,4 +1,6 @@
 import SearchBar from './components/SearchBar';
+import CommandPalette from './components/CommandPalette';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import LibraryPanel, { type LibraryView } from './components/LibraryPanel';
 import SettingsPanel from './components/SettingsPanel';
 import Shortcuts from './components/Shortcuts';
@@ -23,7 +25,7 @@ import { useEffect, useMemo, useState } from 'react';
 // Sekmeler workspace'ten gelir (örnek veri yedeği yok); konum/genişlik ayarlardan.
 export default function App() {
   const { state, setActiveWorkspace, setMode, addShortcut, removeShortcut } = useZeroState();
-  const { settings, setMode: setSettingsMode, setTabs, setEngine } = useZeroSettings();
+  const { settings, setMode: setSettingsMode, setTabs, setEngine, togglePin } = useZeroSettings();
   const mode = MODES[state.activeModeId] ?? MODES.standard;
   const shortcuts = [...mode.builtins, ...state.customs];
   const [closed, setClosed] = useState<string[]>([]);
@@ -48,6 +50,55 @@ export default function App() {
     return fromWs.filter((t) => !closed.includes(t.id));
   }, [state.workspaces, state.activeWorkspaceId, closed]);
 
+  // Gerçek sekmeler: eklenti bağlamında browser.tabs varsa ray onları gösterir
+  // (gerçek başlık + gerçek geçiş). Önizlemede workspace yedeği durur.
+  const [realTabs, setRealTabs] = useState<VTab[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    const refresh = async () => {
+      try {
+        const bt = (window as unknown as { browser?: any }).browser?.tabs;
+        if (!bt?.query) return;
+        const list = await bt.query({ currentWindow: true });
+        if (!live || !Array.isArray(list)) return;
+        setRealTabs(
+          list
+            .filter((t: any) => t && typeof t.url === 'string')
+            .map((t: any) => ({
+              id: `tab_${t.id}`,
+              title: t.title || t.url,
+              url: t.url,
+              active: !!t.active,
+            })),
+        );
+      } catch {
+        /* önizleme — yedek */
+      }
+    };
+    void refresh();
+    try {
+      const bt = (window as unknown as { browser?: any }).browser?.tabs;
+      const evts = [bt?.onUpdated, bt?.onRemoved, bt?.onActivated].filter(Boolean);
+      const wrapped = () => void refresh();
+      for (const e of evts) e.addListener(wrapped);
+      return () => {
+        live = false;
+        for (const e of evts) {
+          try {
+            e.removeListener(wrapped);
+          } catch {
+            /* yoksay */
+          }
+        }
+      };
+    } catch {
+      return () => {
+        live = false;
+      };
+    }
+  }, []);
+  const shownTabs = (realTabs ?? tabs).filter((t) => !closed.includes(t.id));
+
   const handleMode = (id: typeof mode.id) => {
     setMode(id);
     setSettingsMode(id);
@@ -63,16 +114,58 @@ export default function App() {
     handleMode(MODE_ORDER[(i + 1) % MODE_ORDER.length]);
   };
 
-  // Dikey sekme tıklaması: http(s)/about hedeflerine gerçekten gider.
+  // Dikey sekme tıklaması: gerçek sekmede gerçek geçiş, yedekte gezinme.
   // Desteklenmeyen şemalar (örn. gelecekteki zero://) sessizce yoksayılır.
   const activateTab = (id: string) => {
-    const url = tabs.find((t) => t.id === id)?.url ?? '';
+    const m = /^tab_(\d+)$/.exec(id);
+    try {
+      const bt = (window as unknown as { browser?: any }).browser?.tabs;
+      if (m && bt?.update) {
+        void bt.update(Number(m[1]), { active: true }).catch(() => {});
+        return;
+      }
+    } catch {
+      /* yedeğe düş */
+    }
+    const url = shownTabs.find((t) => t.id === id)?.url ?? '';
     try {
       if (/^(https?|about):/i.test(url)) window.location.href = url;
     } catch {
       /* yoksay */
     }
   };
+
+  const closeTab = (id: string) => {
+    const m = /^tab_(\d+)$/.exec(id);
+    try {
+      const bt = (window as unknown as { browser?: any }).browser?.tabs;
+      if (m && bt?.remove) {
+        void bt.remove(Number(m[1])).catch(() => {});
+        return;
+      }
+    } catch {
+      /* yedeğe düş */
+    }
+    setClosed((c) => [...c, id]);
+  };
+
+  // Komut paleti: Ctrl+K / Alt+K açar, Esc kapatır (palet kendisi yönetir).
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      try {
+        const mod = e.ctrlKey || e.metaKey;
+        if ((mod && (e.key === 'k' || e.key === 'K')) || (e.altKey && (e.key === 'k' || e.key === 'K'))) {
+          e.preventDefault();
+          setPaletteOpen((o) => !o);
+        }
+      } catch {
+        /* yoksay */
+      }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
 
   // Oturumu işaretle (bir sonraki sekme/yükleme doğrudan moda girer).
   useEffect(() => {
@@ -92,11 +185,11 @@ export default function App() {
           <aside className="relative flex shrink-0 border-r border-[#1E1E1E] bg-[#0A0A0A]">
             <VerticalTabs
               mode={mode.id}
-              tabs={tabs}
+              tabs={shownTabs}
               width={settings.tabsWidth}
               hoverExpand={settings.hoverExpand}
               hoverPreview={settings.perMode[mode.id]?.hoverPreview ?? true}
-              onClose={(id) => setClosed((c) => [...c, id])}
+              onClose={closeTab}
               onActivate={activateTab}
             />
             <Sidebar onLibrary={setLibView} />
@@ -114,7 +207,7 @@ export default function App() {
             {!entered ? (
               <ModeChooser onSelect={enterMode} />
             ) : (
-              <>
+              <ErrorBoundary name="main">
                 <ModeSwitcher active={mode.id} onSelect={handleMode} />
                 <SettingsPanel settings={settings} onTabs={setTabs} onEngine={setEngine} />
 
@@ -126,7 +219,11 @@ export default function App() {
                   <Shortcuts shortcuts={shortcuts} onAdd={addShortcut} onRemove={removeShortcut} />
                 </div>
 
-                <ModeDashboard mode={mode.id} pinned={settings.perMode[mode.id]?.pinnedTools ?? []} />
+                <ModeDashboard
+                  mode={mode.id}
+                  pinned={settings.perMode[mode.id]?.pinnedTools ?? []}
+                  onTogglePin={togglePin}
+                />
 
                 <RecentWorkspaces
                   workspaces={state.workspaces}
@@ -136,7 +233,7 @@ export default function App() {
                 <div id="recent-workspaces" className="sr-only">workspace bölümü</div>
 
                 <RouterPanel workspaces={state.workspaces} />
-              </>
+              </ErrorBoundary>
             )}
           </div>
         </main>
@@ -146,16 +243,21 @@ export default function App() {
             {libView && <LibraryPanel view={libView} onClose={() => setLibView(null)} />}
             <VerticalTabs
               mode={mode.id}
-              tabs={tabs}
+              tabs={shownTabs}
               width={settings.tabsWidth}
               hoverExpand={settings.hoverExpand}
               hoverPreview={settings.perMode[mode.id]?.hoverPreview ?? true}
-              onClose={(id) => setClosed((c) => [...c, id])}
+              onClose={closeTab}
               onActivate={activateTab}
             />
           </aside>
         )}
       </div>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        req={{ mode: mode.id, shortcuts, onSelectMode: handleMode }}
+      />
     </div>
   );
 }

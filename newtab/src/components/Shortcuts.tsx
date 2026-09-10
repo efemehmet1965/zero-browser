@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Shortcut } from '../types';
-import { BrandDrive, BrandGitHub, BrandMail, BrandNotion, BrandX, BrandZ, IconPlus } from './icons';
+import { BrandDrive, BrandGitHub, BrandMail, BrandNotion, BrandX, BrandZ, IconDownload, IconPlus } from './icons';
 import ShortcutModal from './ShortcutModal';
 
 function Glyph({ sc }: { sc: Shortcut }) {
@@ -15,8 +15,19 @@ function Glyph({ sc }: { sc: Shortcut }) {
   );
 }
 
-// 7 shortcut boxes: 64px rounded-2xl #1A1A1A, label 12px gray below.
-// Last tile (+) opens the add modal. Right-click / long-press deletes custom ones.
+// Netscape yer imi dosyasindan (bookmarks.html) ilk 20 http(s) baglantiyi alir.
+export async function parseBookmarkFile(file: File): Promise<Array<{ name: string; url: string }>> {
+  const text = await file.text();
+  const out: Array<{ name: string; url: string }> = [];
+  const re = /<a\s[^>]*href="([^"]+)"[^>]*>([^<]*)</gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) && out.length < 20) {
+    const url = m[1];
+    const name = (m[2] || '').trim() || url;
+    if (/^https?:\/\//i.test(url)) out.push({ name: name.slice(0, 40), url });
+  }
+  return out;
+}
 export default function Shortcuts({
   shortcuts,
   onAdd,
@@ -27,6 +38,20 @@ export default function Shortcuts({
   onRemove: (id: string) => void;
 }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [imported, setImported] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const doImport = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const items = await parseBookmarkFile(file);
+      for (const it of items) onAdd(it.name, it.url);
+      setImported(items.length);
+      setTimeout(() => setImported(0), 3000);
+    } catch {
+      /* yoksay */
+    }
+  };
 
   return (
     <div>
@@ -66,6 +91,29 @@ export default function Shortcuts({
             <IconPlus size={22} />
           </button>
           <span className="text-[12px] text-[#888]">Add Shortcut</span>
+        </div>
+        <div className="flex w-[72px] flex-col items-center gap-2">
+          <button
+            onClick={() => fileRef.current?.click()}
+            aria-label="Yer imlerini içe aktar"
+            data-testid="bookmark-import"
+            title="bookmarks.html içe aktar"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1A1A1A] text-white transition hover:bg-[#222]"
+          >
+            <IconDownload size={22} />
+          </button>
+          <span className="text-[12px] text-[#888]">{imported > 0 ? `${imported} aktarıldı ✓` : 'İçe aktar'}</span>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".html,.htm,text/html"
+            aria-label="Yer imi dosyası seç"
+            className="hidden"
+            onChange={(e) => {
+              void doImport(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
         </div>
       </div>
       {modalOpen && (
