@@ -36,10 +36,10 @@ EOF
 fi
 
 echo "== redirector yamasi (kaynak) =="
-grep -q "zero-newtab/index.html" "$ESR/browser/components/newtab/lib/AboutNewTabRedirector.sys.mjs" \
-  || grep -q "zero-newtab/index.html" "$ESR/browser/extensions/newtab/lib/AboutNewTabRedirector.sys.mjs" \
-  || { echo "HATA: redirector ZERO yamasi uygulanmamis (apply-chrome-patches.py adim 5)"; exit 1; }
-echo "redirector yamasi OK"
+RED_FILE=$(find "$ESR/browser" "$ESR/toolkit" -name AboutNewTabRedirector.sys.mjs 2>/dev/null | head -n 1)
+test -n "$RED_FILE" || { echo "HATA: redirector dosyasi agacta yok"; exit 1; }
+grep -q "zero-newtab/index.html" "$RED_FILE" || { echo "HATA: redirector ZERO yamasi uygulanmamis ($RED_FILE)"; exit 1; }
+echo "redirector yamasi OK ($RED_FILE)"
 
 echo "== bootstrap + build + package =="
 cd "$ESR"

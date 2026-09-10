@@ -50,9 +50,12 @@ ZERO_NEWTAB_URL = "chrome://browser/content/zero-newtab/index.html"
 ZERO_NEWTAB_DIR = CONTENT / "zero-newtab"
 DIST = ZERO / "newtab" / "dist"
 
-REDIRECTOR_CANDIDATES = [
-    ESR / "browser" / "components" / "newtab" / "lib" / "AboutNewTabRedirector.sys.mjs",
-    ESR / "browser" / "extensions" / "newtab" / "lib" / "AboutNewTabRedirector.sys.mjs",
+REDIRECTOR_NAME = "AboutNewTabRedirector.sys.mjs"
+# Kaynak icindeki yeri surume gore degisebilir (browser/modules,
+# browser/components/newtab/lib, ...). Tahmin yerine agacta ara.
+REDIRECTOR_SEARCH_ROOTS = [
+    ESR / "browser",
+    ESR / "toolkit",
 ]
 
 
@@ -157,10 +160,16 @@ def main():
         print("jar.mn: newtab girdileri zaten var")
 
     # 5. Redirector yamasi: defaultURL -> ZERO sayfasi
-    red = next((p for p in REDIRECTOR_CANDIDATES if p.is_file()), None)
+    red = None
+    for root in REDIRECTOR_SEARCH_ROOTS:
+        if not root.is_dir():
+            continue
+        hits = sorted(root.rglob(REDIRECTOR_NAME))
+        if hits:
+            red = hits[0]
+            break
     if red is None:
-        tried = "\n".join(f"   {p.relative_to(ESR)}" for p in REDIRECTOR_CANDIDATES)
-        fail(f"redirector bulunamadi, denenenler:\n{tried}")
+        fail(f"redirector bulunamadi ({REDIRECTOR_NAME}): browser/ ve toolkit/ tarandi")
     t = red.read_text(encoding="utf-8")
     if ZERO_NEWTAB_URL in t:
         print("redirector: ZERO default zaten var")
