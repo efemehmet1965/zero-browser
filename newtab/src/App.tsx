@@ -16,6 +16,11 @@ import WindowBar from './components/WindowBar';
 import ZeroLogo from './components/ZeroLogo';
 import { MODES, MODE_ORDER } from './modes';
 import { markSeen, shouldShowChooser } from './lib/safeStorage';
+import {
+  activateRealTab,
+  closeRealTab,
+  useBrowserTabs,
+} from './lib/useBrowserTabs';
 import { useZeroSettings } from './settings/useZeroSettings';
 import { useZeroState } from './store';
 import { useEffect, useMemo, useState } from 'react';
@@ -50,54 +55,8 @@ export default function App() {
     return fromWs.filter((t) => !closed.includes(t.id));
   }, [state.workspaces, state.activeWorkspaceId, closed]);
 
-  // Gerçek sekmeler: eklenti bağlamında browser.tabs varsa ray onları gösterir
-  // (gerçek başlık + gerçek geçiş). Önizlemede workspace yedeği durur.
-  const [realTabs, setRealTabs] = useState<VTab[] | null>(null);
-  useEffect(() => {
-    let live = true;
-    const refresh = async () => {
-      try {
-        const bt = (window as unknown as { browser?: any }).browser?.tabs;
-        if (!bt?.query) return;
-        const list = await bt.query({ currentWindow: true });
-        if (!live || !Array.isArray(list)) return;
-        setRealTabs(
-          list
-            .filter((t: any) => t && typeof t.url === 'string')
-            .map((t: any) => ({
-              id: `tab_${t.id}`,
-              title: t.title || t.url,
-              url: t.url,
-              active: !!t.active,
-            })),
-        );
-      } catch {
-        /* önizleme — yedek */
-      }
-    };
-    void refresh();
-    try {
-      const bt = (window as unknown as { browser?: any }).browser?.tabs;
-      const evts = [bt?.onUpdated, bt?.onRemoved, bt?.onActivated].filter(Boolean);
-      const wrapped = () => void refresh();
-      for (const e of evts) e.addListener(wrapped);
-      return () => {
-        live = false;
-        for (const e of evts) {
-          try {
-            e.removeListener(wrapped);
-          } catch {
-            /* yoksay */
-          }
-        }
-      };
-    } catch {
-      return () => {
-        live = false;
-      };
-    }
-  }, []);
-  const shownTabs = (realTabs ?? tabs).filter((t) => !closed.includes(t.id));
+  // Eklenti bağlamında ray gerçek sekmeleri gösterir, önizlemede workspace yedeği.
+  const shownTabs = useBrowserTabs(tabs).filter((t) => !closed.includes(t.id));
 
   const handleMode = (id: typeof mode.id) => {
     setMode(id);
@@ -117,16 +76,7 @@ export default function App() {
   // Dikey sekme tıklaması: gerçek sekmede gerçek geçiş, yedekte gezinme.
   // Desteklenmeyen şemalar (örn. gelecekteki zero://) sessizce yoksayılır.
   const activateTab = (id: string) => {
-    const m = /^tab_(\d+)$/.exec(id);
-    try {
-      const bt = (window as unknown as { browser?: any }).browser?.tabs;
-      if (m && bt?.update) {
-        void bt.update(Number(m[1]), { active: true }).catch(() => {});
-        return;
-      }
-    } catch {
-      /* yedeğe düş */
-    }
+    if (activateRealTab(id)) return;
     const url = shownTabs.find((t) => t.id === id)?.url ?? '';
     try {
       if (/^(https?|about):/i.test(url)) window.location.href = url;
@@ -136,16 +86,7 @@ export default function App() {
   };
 
   const closeTab = (id: string) => {
-    const m = /^tab_(\d+)$/.exec(id);
-    try {
-      const bt = (window as unknown as { browser?: any }).browser?.tabs;
-      if (m && bt?.remove) {
-        void bt.remove(Number(m[1])).catch(() => {});
-        return;
-      }
-    } catch {
-      /* yedeğe düş */
-    }
+    if (closeRealTab(id)) return;
     setClosed((c) => [...c, id]);
   };
 

@@ -21,6 +21,8 @@ cat >> "$ESR/browser/app/profile/firefox.js" <<'EOF'
 // ZERO defaults (MVP)
 pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
 pref("browser.startup.homepage", "about:newtab");
+pref("browser.startup.page", 1);
+pref("browser.startup.homepage.abouthome_cache.enabled", false);
 pref("browser.newtabpage.enabled", true);
 pref("zero.newtab.url", "about:newtab");
 pref("browser.pocket.enabled", false);
@@ -66,6 +68,13 @@ cd "$ESR"
 ./mach build || ./mach build
 test -f obj-zero/dist/bin/zero.exe || test -f obj-zero/dist/bin/firefox.exe || { echo "HATA: zero.exe/firefox.exe uretilmedi"; exit 1; }
 ./mach package
+echo "== system addon envanteri (tani) =="
+ls obj-zero/dist/bin/browser/ 2>/dev/null || true
+if [ ! -d obj-zero/dist/bin/browser/features ]; then
+  echo "UYARI: browser/features yok — gomulu newtab eklentisi omni'den geliyor, AS baslatma izlenecek"
+else
+  ls obj-zero/dist/bin/browser/features/ 2>/dev/null || true
+fi
 echo "== system addon dogrulama (omni.ja) =="
 python3 -c "import glob,zipfile; cs=glob.glob('obj-zero/dist/**/omni.ja', recursive=True); print('omni:',cs); assert cs,'omni.ja bulunamadi'; names=[n for c in cs for n in zipfile.ZipFile(c).namelist()]; req=['builtin-addons/zero-newtab/dist/index.html','zero-newtab/index.html','ZeroMode.sys.mjs','ZeroChrome.sys.mjs','ZeroPrefs.sys.mjs','zero-chrome.js','zero-chrome.css']; [print(r,'->',bool([n for n in names if r in n])) or __import__('sys').exit(f'pakette yok: '+r) for r in req if not [n for n in names if r in n]]; print('omni dogrulama OK')"
 echo "BUILD OK"

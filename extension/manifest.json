@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "ZERO Newtab",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ZERO browser MVP — replaces newtab with zero://newtab (React+Vite build).",
   "browser_specific_settings": {
     "gecko": {
@@ -12,6 +12,17 @@
   "permissions": ["storage", "tabs", "bookmarks", "history", "downloads", "https://api.pwnedpasswords.com/*"],
   "chrome_url_overrides": {
     "newtab": "dist/index.html"
+  },
+  "sidebar_action": {
+    "default_title": "ZERO Sekmeler",
+    "default_panel": "dist/sidebar.html",
+    "default_icon": "dist/logo.svg"
+  },
+  "commands": {
+    "_execute_sidebar_action": {
+      "suggested_key": { "default": "Ctrl+Alt+Z" },
+      "description": "ZERO sekme çubuğunu aç/kapat"
+    }
   },
   "background": {
     "scripts": ["background.js"]

@@ -441,6 +441,13 @@ test('yer imi dosyasi kisayol aktarir', async ({ page }) => {
   await expect(page.getByText('2 aktarıldı ✓')).toBeVisible();
 });
 
+test('kenar sekme cubugu sayfasi rayi gosterir', async ({ page }) => {
+  await page.goto('/sidebar.html');
+  await expect(page.getByLabel('Dikey sekmeler')).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'New Tab' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Yeni sekme' })).toBeVisible();
+});
+
 test('arama DuckDuckGo yonlendirmesi yapar', async ({ page }) => {  await page.getByPlaceholder('Search the web privately').fill('zero browser test');
   await page.keyboard.press('Enter');
   await page.waitForURL(/duckduckgo\.com/, { timeout: 20000 });

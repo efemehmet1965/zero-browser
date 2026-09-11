@@ -54,11 +54,15 @@
   display: none !important;
 }
 
-/* === Yatay sekme seridi: HER ZAMAN gorunur ===
- * Not: once tamamen gizliydi; ama dikey ray yalnizca newtab sayfasinda
- * oldugu icin sitelerde sekme kalmiyor + baslik cubugu yuksekligini
- * kaybedip pencere dugmeleri (kapat/buyut/kucult) gomme gomuluyordu.
- * Yerel dikey sekmeler govdeye girene kadar serit acik kalir. */
+/* === Ust serit: sekmeler SOL rayda, ustte sadece surukleme + dugmeler ===
+ * Sekme TUPLERI gizli (dugme kutusu ve cubuk yuksekligi korunur):
+ * kapat/buyut/kucult sagda durur, bos cubuk pencereyi tasir.
+ * (Eskiden tum #TabsToolbar gizliydi; dugmeler de gomuluyordu.) */
+#tabbrowser-tabs,
+#tabs-newtab-button,
+#new-tab-button,
+#alltabs-button { display: none !important; }
+#TabsToolbar { min-height: 44px !important; }
 #titlebar { appearance: none !important; background: #000 !important; }
 
 /* === Tum toolbar dugmeleri === */

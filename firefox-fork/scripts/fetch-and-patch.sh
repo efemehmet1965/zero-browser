@@ -65,6 +65,8 @@ grep -q '"zero"' browser/moz.build || echo 'DIRS += ["zero"]' >> browser/moz.bui
 # ZERO varsayilan ayarlari (tek seferlik, tekrar calistirmaya dayanikli)
 for pref in \
   'pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);' \
+  'pref("browser.startup.page", 1);' \
+  'pref("browser.startup.homepage.abouthome_cache.enabled", false);' \
   'pref("browser.pocket.enabled", false);' \
   'pref("datareporting.healthreport.uploadEnabled", false);' \
   'pref("app.shield.optoutstudies.enabled", false);' \
